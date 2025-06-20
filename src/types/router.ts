@@ -1,4 +1,4 @@
-import { UserRole } from "./auth";
+import type { UserRole } from "./auth";
 
 /**
  * Extends the default RouteMeta interface to include our custom properties

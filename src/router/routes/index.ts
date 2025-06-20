@@ -1,4 +1,4 @@
-import { RouteRecordRaw } from 'vue-router';
+import type { RouteRecordRaw } from 'vue-router';
 import { authRoutes } from './auth-routes';
 import { adminRoutes } from './admin-routes';
 import { userRoutes } from './user-routes';

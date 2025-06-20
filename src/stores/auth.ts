@@ -40,7 +40,7 @@ export const useAuthStore = defineStore("auth", () => {
   const hasPermission = (permission: string): boolean => {
     // This is a simple implementation. In a real app, you would have
     // a more robust permission system with role-based permissions
-    const rolePermissions: Record<UserRole, string[]> = {
+    const rolePermissions: Record<string, string[]> = {
       superadmin: [
         "all",
         "user:read",

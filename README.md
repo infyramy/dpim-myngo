@@ -266,3 +266,177 @@ Join thousands of NGOs and businesses already using myNGO to:
 **Together, let's build stronger communities through technology, connection, and collaboration.** 🤝
 
 *myNGO - Where NGOs, businesses, and communities thrive together.*
+
+# myNGO Frontend Application
+
+A modern Vue 3 frontend application with TypeScript, Shadcn UI, and production-ready deployment configurations.
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+ 
+- pnpm 8+
+- Docker (optional)
+
+### Development
+
+1. **Clone and install dependencies:**
+```bash
+git clone <repository-url>
+cd myngo
+pnpm install
+```
+
+2. **Set up environment variables:**
+```bash
+cp env.example .env
+# Edit .env with your configuration
+```
+
+3. **Start development server:**
+```bash
+pnpm run dev
+```
+
+## 🌍 Environment Configuration
+
+Copy `env.example` to `.env` and configure the following variables:
+
+### Required Variables
+- `VITE_API_URL` - Backend API URL (e.g., `https://api.example.com`)
+- `VITE_APP_NAME` - Application name
+- `VITE_APP_URL` - Frontend application URL
+
+### Optional Variables
+- `VITE_UMAMI_WEBSITE_ID` - Analytics website ID
+- `VITE_UMAMI_URL` - Analytics service URL
+- `VITE_PLUNK_API_KEY` - Email service API key
+- `VITE_MAILJET_API_KEY` - Mailjet API key
+- `VITE_DEFAULT_FROM_EMAIL` - Default sender email
+
+## 🐳 Deployment
+
+### Docker Deployment
+
+**Build and run:**
+```bash
+docker build -t myngo-frontend .
+docker run -p 3000:3000 \
+  -e VITE_API_URL=https://your-api.com \
+  -e VITE_APP_NAME=myNGO \
+  myngo-frontend
+```
+
+**Using Docker Compose:**
+```bash
+# For production
+docker-compose up frontend
+
+# For development
+docker-compose --profile dev up dev
+```
+
+### Coolify Deployment
+
+1. **Connect your repository** to Coolify
+2. **Set build configuration:**
+   - Build Command: `pnpm run build`
+   - Start Command: `serve -s dist -l 3000`
+   - Port: `3000`
+
+3. **Configure environment variables** in Coolify dashboard:
+   - `VITE_API_URL=https://your-api.com`
+   - `VITE_APP_NAME=myNGO`
+   - `VITE_ENVIRONMENT=production`
+
+### Vercel Deployment
+
+1. **Connect your repository** to Vercel
+2. **Environment variables** are automatically read from `vercel.json`
+3. **Set Vercel environment variables:**
+   - `@vite_api_url` → Your API URL
+   - `@vite_app_name` → Your app name
+   - `@vite_environment` → `production`
+
+### Manual Server Deployment
+
+**Build the application:**
+```bash
+pnpm install
+pnpm run build
+```
+
+**Serve static files:**
+```bash
+# Using serve (recommended)
+npx serve -s dist -l 3000
+
+# Using nginx
+# Copy dist/ contents to your web server root
+```
+
+## 🏗️ Build Scripts
+
+- `pnpm run dev` - Start development server
+- `pnpm run build` - Build for production
+- `pnpm run preview` - Preview production build
+- `pnpm run lint` - Run ESLint
+- `pnpm run type-check` - Run TypeScript check
+
+## 🎨 Features
+
+- ⚡ **Vite** - Fast build tool and dev server
+- 🖖 **Vue 3** - Latest Vue with Composition API
+- 📘 **TypeScript** - Type safety throughout
+- 🎯 **Shadcn/ui** - Beautiful, accessible components
+- 🌍 **i18n** - Internationalization support
+- 📱 **PWA** - Progressive Web App capabilities
+- 📊 **Analytics** - Built-in Umami analytics support
+- 🔐 **Auth** - Authentication state management
+- 🎨 **Theming** - Dark/light mode support
+
+## 📁 Project Structure
+
+```
+src/
+├── components/     # Reusable UI components
+├── pages/         # Page components
+├── layouts/       # Layout components
+├── stores/        # Pinia state stores
+├── services/      # API and business logic
+├── composables/   # Vue composables
+├── types/         # TypeScript type definitions
+├── assets/        # Static assets
+└── router/        # Vue Router configuration
+```
+
+## 🔧 Configuration
+
+### Environment Variables
+All environment variables must be prefixed with `VITE_` to be available in the frontend.
+
+### Feature Flags
+Control features via environment variables:
+- `VITE_FEATURE_DARK_MODE=true`
+- `VITE_FEATURE_ANALYTICS=false`
+- `VITE_FEATURE_NOTIFICATIONS=true`
+
+### API Configuration
+Configure API settings:
+- `VITE_API_TIMEOUT=30000` (milliseconds)
+- `VITE_API_RETRIES=3` (number)
+
+## 🚀 Production Checklist
+
+- [ ] Set `VITE_ENVIRONMENT=production`
+- [ ] Configure proper `VITE_API_URL`
+- [ ] Set up analytics if needed
+- [ ] Configure email service
+- [ ] Test all environment variables
+- [ ] Verify build output
+- [ ] Check health endpoints
+- [ ] Test routing and navigation
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) file for details.

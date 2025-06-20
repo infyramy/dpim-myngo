@@ -8,7 +8,7 @@ export interface User {
   updated_at?: string;
 }
 
-export type UserRole = 'superadmin' | 'admin' | 'operator' | 'user';
+export type UserRole = 'superadmin' | 'admin' | 'operator' | 'user' | 'manager';
 
 export interface UserProfile {
   user_id: string;

@@ -1,10 +1,18 @@
 import { ofetch } from "ofetch";
 import { useAuthStore } from "@/stores/auth";
 
-const backendUrl = "http://localhost:3002";
+// Get API URL from environment variables or window global
+const getApiUrl = () => {
+  if (typeof window !== 'undefined' && window.API_URL) {
+    return window.API_URL;
+  }
+  return import.meta.env.VITE_API_URL || "https://api.example.com";
+};
+
+const backendUrl = getApiUrl();
 
 // Helper function to get auth headers
-const getAuthHeaders = () => {
+const getAuthHeaders = (): Record<string, string> => {
   const authStore = useAuthStore();
   const user = authStore.getUser();
   
@@ -73,9 +81,7 @@ export const apiFetching = () => {
       try {
         const response = await ofetch(`${backendUrl}${url}`, {
           method: 'GET',
-          headers: {
-            ...getAuthHeaders(),
-          },
+          headers: getAuthHeaders(),
           credentials: 'include',
         });
         
@@ -139,9 +145,7 @@ export const apiFetching = () => {
       try {
         const response = await ofetch(`${backendUrl}${url}`, {
           method: 'DELETE',
-          headers: {
-            ...getAuthHeaders(),
-          },
+          headers: getAuthHeaders(),
           credentials: 'include',
         });
         

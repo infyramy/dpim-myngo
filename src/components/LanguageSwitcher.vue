@@ -54,7 +54,7 @@ interface LanguageInfo {
 
 // Map language codes to flag emojis and proper names
 const availableLanguages: ComputedRef<LanguageInfo[]> = computed(() => {
-  return availableLocales.value.map((code: string) => {
+  return availableLocales.map((code: string) => {
     const langMap: Record<string, { name: string, flag: string }> = {
       'en': { name: 'English', flag: '🇺🇸' },
       'es': { name: 'Español', flag: '🇪🇸' },
@@ -70,7 +70,7 @@ const availableLanguages: ComputedRef<LanguageInfo[]> = computed(() => {
 
 // Change the language
 const changeLanguage = (langCode: string) => {
-  if (availableLocales.value.includes(langCode)) {
+  if (availableLocales.includes(langCode)) {
     locale.value = langCode;
     // Save preference to localStorage for persistence
     localStorage.setItem('userLanguage', langCode);

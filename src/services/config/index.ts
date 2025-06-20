@@ -35,9 +35,9 @@ export interface AppConfig {
  * Default configuration values
  */
 const defaultConfig: AppConfig = {
-  environment: 'development',
+  environment: 'production',
   api: {
-    url: 'http://localhost:3000/api',
+    url: 'https://api.example.com',
     timeout: 30000,
     retries: 3,
   },
@@ -46,13 +46,13 @@ const defaultConfig: AppConfig = {
     port: 5432,
     user: 'postgres',
     password: 'postgres',
-    name: 'jboilerplate_dev',
+    name: 'myngo_prod',
   },
   email: {
     plunkApiKey: '',
     mailjetApiKey: '',
     mailjetSecretKey: '',
-    defaultFromEmail: 'no-reply@jboilerplate.com',
+    defaultFromEmail: 'no-reply@example.com',
   },
   analytics: {
     umamiWebsiteId: '',
@@ -325,11 +325,11 @@ export interface UIConfig {
  */
 const defaultUIConfig: UIConfig = {
   app: {
-    name: 'jBoilerplate',
-    url: 'http://localhost:3000',
+    name: 'myNGO',
+    url: 'https://app.example.com',
     adminEmail: 'admin@example.com',
-    environment: 'development',
-    debug: true,
+    environment: 'production',
+    debug: false,
   },
   locale: {
     defaultLanguage: 'en',

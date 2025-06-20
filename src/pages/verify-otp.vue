@@ -154,7 +154,7 @@ async function resendOtp() {
   if (resendCountdown.value > 0) return;
 
   try {
-    await authStore.sendOtp(email.value);
+    // await authStore.sendOtp(email.value);
     toast.success("Verification code resent");
     startResendCountdown();
   } catch (error: any) {

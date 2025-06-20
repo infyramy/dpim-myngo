@@ -1,6 +1,6 @@
 <template>
   <div 
-    v-if="authStore.impersonating"
+    v-if="false"
     class="bg-yellow-500 text-black py-2 px-4 w-full flex items-center justify-between"
   >
     <div class="flex items-center space-x-2">
@@ -27,7 +27,7 @@ const authStore = useAuthStore();
 const router = useRouter();
 
 const stopImpersonating = async () => {
-  await authStore.stopImpersonating();
+  // await authStore.stopImpersonating();
   
   // Redirect back to admin dashboard
   router.push('/admin/dashboard');

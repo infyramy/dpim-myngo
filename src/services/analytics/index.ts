@@ -1,4 +1,4 @@
-import { configService } from '@/services/config';
+import { configService } from '@/services/config/index';
 
 /**
  * Analytics service for tracking user events using Umami

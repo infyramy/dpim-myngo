@@ -1,5 +1,11 @@
 import { ofetch } from 'ofetch';
-import { getApiUrl } from './api';
+// Get API URL from environment variables or window global
+const getApiUrl = () => {
+  if (typeof window !== 'undefined' && window.API_URL) {
+    return window.API_URL;
+  }
+  return import.meta.env.VITE_API_URL || "https://api.example.com";
+};
 
 /**
  * Security service for managing CSRF tokens and protection
