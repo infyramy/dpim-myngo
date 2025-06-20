@@ -101,7 +101,6 @@ RUN chmod +x start.sh
 # Ensure nginx directories exist and have proper permissions
 RUN mkdir -p /var/cache/nginx /var/log/nginx /etc/nginx/http.d && \
     chown -R appuser:appuser /app && \
-    chown -R nginx:nginx /usr/share/nginx/html && \
     chmod -R 755 /var/cache/nginx /var/log/nginx /etc/nginx/http.d
 
 # Set environment variables with defaults
