@@ -30,11 +30,8 @@ RUN pnpm install --no-frozen-lockfile --ignore-scripts
 # Copy source code
 COPY . .
 
-# Build the frontend application
-RUN pnpm run build:only
-
-# Build the backend application
-RUN pnpm run build:backend
+# Build both frontend and backend
+RUN pnpm run build
 
 # =============================================================================
 # Stage 2: Production with Nginx (for production deployments)
