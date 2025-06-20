@@ -275,7 +275,8 @@ export const useNavigationStore = defineStore("navigation", () => {
    * Get the navigation menu for the current user
    */
   const navigation = computed(() => {
-    const userType = authStore.getUser()?.user_type;
+    // Use the reactive user from auth store instead of localStorage
+    const userType = authStore.user?.user_type || authStore.getUser()?.user_type;
 
     switch (userType) {
       case "superadmin":

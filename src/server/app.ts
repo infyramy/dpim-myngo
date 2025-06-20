@@ -15,6 +15,8 @@ import lookupRoutes from "./routes/lookup";
 import productsRoutes from "./routes/products";
 import applicationsRoutes from "./routes/applications";
 import dashboardRoutes from "./routes/dashboard";
+import operatorDashboardRoutes from "./routes/operator-dashboard";
+import membersRoutes from "./routes/members";
 
 const app = express();
 
@@ -52,6 +54,8 @@ app.use("/lookup", lookupRoutes);
 app.use("/products", productsRoutes);
 app.use("/applications", applicationsRoutes);
 app.use("/dashboard", dashboardRoutes);
+app.use("/operator-dashboard", operatorDashboardRoutes);
+app.use("/members", membersRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

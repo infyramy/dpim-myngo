@@ -122,11 +122,11 @@ function handleKeyDown(e: KeyboardEvent) {
 
 // Register and unregister keyboard event listeners
 onMounted(() => {
-  window.addEventListener("keydown", handleKeyDown);
+  // window.addEventListener("keydown", handleKeyDown);
 });
 
 onUnmounted(() => {
-  window.removeEventListener("keydown", handleKeyDown);
+  // window.removeEventListener("keydown", handleKeyDown);
 });
 </script>
 
@@ -139,8 +139,8 @@ onUnmounted(() => {
           variant="ghost"
           class="w-full h-12 justify-between py-2 px-2 rounded-md bg-transparent border-0"
         >
-          <div class="flex items-center gap-2">
-            <Avatar class="h-7 w-7">
+          <div class="flex items-center gap-2 min-w-0 flex-1">
+            <Avatar class="h-7 w-7 flex-shrink-0">
               <AvatarImage
                 :src="authStore.getUser()?.avatar || '/avatar.png'"
               />
@@ -148,27 +148,38 @@ onUnmounted(() => {
                 authStore.getUser()?.fullname?.charAt(0) ?? "U"
               }}</AvatarFallback>
             </Avatar>
-            <div class="flex flex-col items-start justify-center">
-              <span class="font-medium leading-none text-sm">{{
-                authStore.getUser()?.fullname ?? "User"
-              }}</span>
-              <span class="text-xs leading-none text-muted-foreground mt-0.5">{{
-                authStore.getUser()?.email
-              }}</span>
+            <div
+              class="flex flex-col items-start justify-center min-w-0 flex-1"
+            >
+              <span
+                class="font-medium leading-none text-sm truncate w-full"
+                :title="authStore.getUser()?.fullname ?? 'User'"
+                >{{ authStore.getUser()?.fullname ?? "User" }}</span
+              >
+              <span
+                class="text-xs leading-none text-muted-foreground mt-0.5 truncate w-full"
+                :title="authStore.getUser()?.email"
+                >{{ authStore.getUser()?.email }}</span
+              >
             </div>
           </div>
-          <ChevronsUpDown class="h-4 w-4 ml-2 opacity-50" />
+          <ChevronsUpDown class="h-4 w-4 flex-shrink-0 opacity-50" />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" class="w-56">
+        <!-- Fullname and email section-->
         <DropdownMenuLabel class="font-normal">
-          <div class="flex flex-col space-y-1">
-            <p class="text-sm font-medium leading-none">
-              {{ authStore.getUser()?.fullname }}
-            </p>
-            <p class="text-xs leading-none text-muted-foreground">
-              {{ authStore.getUser()?.email }}
-            </p>
+          <div class="flex flex-col space-y-1 min-w-0">
+            <span
+              class="font-medium leading-none text-sm truncate max-w-full"
+              :title="authStore.getUser()?.fullname ?? 'User'"
+              >{{ authStore.getUser()?.fullname ?? "User" }}</span
+            >
+            <span
+              class="text-xs leading-none text-muted-foreground mt-0.5 truncate max-w-full"
+              :title="authStore.getUser()?.email"
+              >{{ authStore.getUser()?.email }}</span
+            >
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />

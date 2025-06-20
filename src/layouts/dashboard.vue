@@ -222,7 +222,12 @@ onUnmounted(() => {
               }"
             ></div>
             <User class="h-4 w-4" />
-            <span class="capitalize">{{ authStore.getUser()?.user_type }}</span>
+            <span
+              class="capitalize"
+              v-if="authStore.getUser()?.user_type != 'operator'"
+              >{{ authStore.getUser()?.user_type }}</span
+            >
+            <span class="capitalize" v-else>State Admin</span>
             <div
               class="ml-auto"
               v-if="authStore.getUser()?.user_type != 'operator'"
@@ -253,7 +258,7 @@ onUnmounted(() => {
             </div>
             <div v-else class="ml-auto">
               <img
-                src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAT4AAACfCAMAAABX0UX9AAAAkFBMVEX80RbaJR3////rjRr91hbZFh3XAB7+2hXYAADeSEPaIBbZEQDaIhrZHRPZFwvZFAXxvLvhXVn99fX21NPjbWrur6387+/cOTPqlpT1z8721dTvtLP43t7pkY/66OfnhILfUEzjamfrnZvywcDmf3zspaPbLyj0ycjdQDvkdHHhX1zdRD/cOjToi4nfTkrcMywmtGP6AAAE4ElEQVR4nO3cWVvabBSFYZP2003eJAzKUAZFFCxa6v//dx9DQrMhYMIKF1zb9Zz0oNqDu8k7EXLjXXW3dzfX3aWBjkc+KPJBkQ+KfFDfiS8Mwwr/tXXfgy9yssxF8fqPuJJ/c519vnBp1uy9DFv+usf7watX2VVonS8Q9/TLz/bYmD6Rr1CB1F6UXX8RinNRRXi2+UKp6QuvPZO42tnDMF/sGgpv6lxQHdwmu3zyoPDePFf5ssUuXygDpTeXM+CZ5QvcUM22Xr1atjSbfJHXUTeuVD7oJZnkC7xWVq9xnht3lUW+0HW0XuVq2yzyiRr3fp1RzyKfnnM757tzPYt8sV7vdQvMGqcfwZjjC53SW7ivf8WNmqfOzOb4RO3UhgUGvqDr18iXWNTUxfe7gIs8km9roc5YiqxZpO2TLyn4UBff59cs8bNPvjQ98r3lXHyBXseEkU++LYaedpv7x8pBM1RHpnJPvm3xk14x7/9E8Me/XwRSTwRl5JNvm5442nlrvvp8+Tf9kbcWjJJ5mnwbPnXvvud+JJQMj8PRTJx0yPevqKn4DqxaUrOlYDrRkG9VvZfVO7TjiPTihnxpoj7UHRza7rrRLt/vUw8NbPGpg77Rwc83NquV7CRTk9M+xLTFp87o5wcvqTDeu3077bGc8PSBLT4lMj6sEb/v+a0Em6UFTfHpPcfHkdtxdU6QU2vQlFLDoCW+nS3b0XNmfZ9nG5Xxs8S3c/UdO+tzT/l2w0m3wPG0UT499h1ZzC13vnl2vVnZCdgwX/6ebfODj3t26Ta4XLb4lMrrwUFsb+LoZw5hvjGfOnCZHhrF1gfMqu6pD6+Z4nPqqso7a161OWAuOkx+I774NWuSd1q6SvrpT7wMyZcpnKlrapZ7R0pyLPMyF/HIp2jU3LHImzs2B8wruzg5eiZfmh788p6tCuu+33iWdGuWHD2Tb13wV929Od9CiOYPIpkF4ebomXyJhrp7ezlLl0gvpjdHz+TbFC+yfK0Cz2isj57Jl6T3bYc3HpnfuCffNqc+LTq09Mu2OnomX5o+yMsb/XaL38n3D0NvaGdFHvBrjMm3xXjL8vWLPFcfdU99fNweX+jU7Tsp4nfyw/f2+LxIr52fS52+l8wgn+fUwYtfq/DVD7tZ5NseqiR9nM/PJJ8nE+U3Ptv9a5PPE7V58+fn+l6bUT5P9PKvLdW9PSObVT6v/qm/T147y1cDzfJ5wc4AOHBneBeEXb7lAuZTbUD8aVz5LWyZb3kB/tXvwWk0xVX6IhzTfMsdiHxO1TfzW4O5V+4ZtKMZ51u9kkTGk766Bod8BViZloLSfVhM2oPBtPc6rvPqK10QxW5dHHHsu5rIB0U+KPJBkQ/q6vn+u+pu735edTc/GNDNpf//jnd3e+nr/3iXHju+6O720qPv8S7t80XkgyIfFPmgyAdFPijyQZEPinxQ5IMiHxT5oMgHRT4o8kGRD4p8UOSDIh8U+aDIB0U+KPJBkQ+KfFDkgyIfFPmgyAdFPijyQZEPinxQ5IMiHxT5oMgHRT4o8kGRD4p8UOSDIh8U+aDIB0U+KPJBkQ+KfFDkgyIfFPmgyAdFPijyQZEPinxQ5IMiHxT5oMgHRT4o8kGRD4p8UOSDIh8U+aDIB0U+KPJBkQ+KfFDkgyIfFPmgyAd17Xz/A9JvoivUtEUXAAAAAElFTkSuQmCC"
+                :src="authStore.getOperatorStates()?.state_flag"
                 alt=""
                 class="h-4 w-4 rounded-full"
               />

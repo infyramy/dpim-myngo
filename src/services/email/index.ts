@@ -1,6 +1,5 @@
-import { apiPost } from "@/services/api";
 import { configService } from "@/services/config";
-import type { EmailOptions, EmailResponse, EmailTemplate } from "@/types/email";
+import type { EmailOptions, EmailResponse } from "@/types/email";
 
 /**
  * Email service supporting multiple providers (Mailjet, Plunk)

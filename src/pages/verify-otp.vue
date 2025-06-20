@@ -125,6 +125,11 @@ async function verifyOtp() {
     // Set authstore
     authStore.setUser(response.data);
 
+    // Set operator stores
+    if (response.data.user.user_role === "operator") {
+      authStore.setOperatorStates(response.data.operator_states);
+    }
+
     setTimeout(() => {
       toast.success("Verification code verified");
 

@@ -11,6 +11,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "vue-sonner";
 import { apiFetching } from "@/services/api-fetching";
 
@@ -26,8 +27,10 @@ interface Application {
   rejectionReason?: string;
 }
 
-// Mock data for member applications
+// Application data and state
 const applications = ref<Application[]>([]);
+const isLoading = ref(false);
+const isSubmitting = ref(false);
 
 // Application review
 const selectedApplication = ref<Application | null>(null);
@@ -35,6 +38,16 @@ const isReviewDialogOpen = ref(false);
 const isApproveDialogOpen = ref(false);
 const isRejectDialogOpen = ref(false);
 const rejectionReason = ref("");
+
+// Computed for better empty state handling
+const hasActiveFilters = computed(() => {
+  return searchQuery.value.trim() !== "";
+});
+
+// Helper function to clear search
+function clearSearch() {
+  searchQuery.value = "";
+}
 
 // Function to open review dialog
 function openReviewDialog(application: Application) {
@@ -60,6 +73,7 @@ async function approveApplication() {
   if (!selectedApplication.value) return;
 
   try {
+    isSubmitting.value = true;
     await apiFetching().post(
       "/applications/approve",
       {
@@ -74,6 +88,8 @@ async function approveApplication() {
   } catch (error) {
     console.log("Error approving application:", error);
     toast.error("Failed to approve application");
+  } finally {
+    isSubmitting.value = false;
   }
 }
 
@@ -87,6 +103,7 @@ async function rejectApplication() {
   }
 
   try {
+    isSubmitting.value = true;
     await apiFetching().post(
       "/applications/reject",
       {
@@ -104,6 +121,8 @@ async function rejectApplication() {
   } catch (error) {
     console.log("Error rejecting application:", error);
     toast.error("Failed to reject application");
+  } finally {
+    isSubmitting.value = false;
   }
 }
 
@@ -122,6 +141,7 @@ const filteredApplications = computed(() => {
 
 async function fetchApplications() {
   try {
+    isLoading.value = true;
     const response = await apiFetching().get("/applications", true);
 
     console.log("Applications:", response.data.applications);
@@ -129,6 +149,9 @@ async function fetchApplications() {
     applications.value = response.data.applications;
   } catch (error) {
     console.log("Error fetching applications:", error);
+    toast.error("Failed to load applications");
+  } finally {
+    isLoading.value = false;
   }
 }
 
@@ -169,64 +192,123 @@ onMounted(async () => {
               </tr>
             </thead>
             <tbody>
-              <tr
-                v-for="(application, index) in filteredApplications"
-                :key="application.id"
-                class="border-b"
-              >
-                <td class="p-4 align-middle font-medium">
-                  {{ index + 1 }}
-                </td>
-                <td class="p-4 align-middle">{{ application.fullname }}</td>
-                <td class="p-4 align-middle">{{ application.email }}</td>
-                <td class="p-4 align-middle">
-                  {{ new Date(application.apply_at).toLocaleDateString() }}
-                </td>
-                <td class="p-4 align-middle text-center">
-                  <span
-                    :class="[
-                      'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
-                      application.status === 'pending'
-                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
-                        : application.status === 'approved'
-                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
-                    ]"
-                  >
-                    {{
-                      application.status.charAt(0).toUpperCase() +
-                      application.status.slice(1)
-                    }}
-                  </span>
-                </td>
-                <td class="p-4 align-middle text-right">
-                  <div class="flex justify-end gap-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      @click="openReviewDialog(application)"
+              <!-- Loading skeleton -->
+              <template v-if="isLoading">
+                <tr v-for="i in 5" :key="`skeleton-${i}`" class="border-b">
+                  <td class="p-4 align-middle">
+                    <Skeleton class="h-4 w-8" />
+                  </td>
+                  <td class="p-4 align-middle">
+                    <Skeleton class="h-4 w-32" />
+                  </td>
+                  <td class="p-4 align-middle">
+                    <Skeleton class="h-4 w-40" />
+                  </td>
+                  <td class="p-4 align-middle">
+                    <Skeleton class="h-4 w-24" />
+                  </td>
+                  <td class="p-4 align-middle text-center">
+                    <Skeleton class="h-5 w-16 rounded-full mx-auto" />
+                  </td>
+                  <td class="p-4 align-middle text-right">
+                    <div class="flex justify-end gap-2">
+                      <Skeleton class="h-8 w-16" />
+                      <Skeleton class="h-8 w-16" />
+                      <Skeleton class="h-8 w-16" />
+                    </div>
+                  </td>
+                </tr>
+              </template>
+
+              <!-- Empty state -->
+              <template v-else-if="filteredApplications.length === 0">
+                <tr>
+                  <td colspan="6" class="p-8 text-center">
+                    <div class="flex flex-col items-center gap-4">
+                      <div class="text-4xl">👥</div>
+                      <div class="text-lg font-medium text-muted-foreground">
+                        {{ hasActiveFilters ? 'No applications match your search' : 'No applications yet' }}
+                      </div>
+                      <div class="text-sm text-muted-foreground">
+                        {{ hasActiveFilters 
+                          ? 'Try adjusting your search criteria or clear the filters' 
+                          : 'Member applications will appear here once they are submitted' 
+                        }}
+                      </div>
+                      <Button
+                        v-if="hasActiveFilters"
+                        variant="outline"
+                        @click="clearSearch"
+                        class="mt-2"
+                      >
+                        Clear search
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              </template>
+
+              <!-- Application rows -->
+              <template v-else>
+                <tr
+                  v-for="(application, index) in filteredApplications"
+                  :key="application.id"
+                  class="border-b"
+                >
+                  <td class="p-4 align-middle font-medium">
+                    {{ index + 1 }}
+                  </td>
+                  <td class="p-4 align-middle">{{ application.fullname }}</td>
+                  <td class="p-4 align-middle">{{ application.email }}</td>
+                  <td class="p-4 align-middle">
+                    {{ new Date(application.apply_at).toLocaleDateString() }}
+                  </td>
+                  <td class="p-4 align-middle text-center">
+                    <span
+                      :class="[
+                        'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium',
+                        application.status === 'pending'
+                          ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
+                          : application.status === 'approved'
+                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
+                          : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                      ]"
                     >
-                      Review
-                    </Button>
-                    <Button
-                      v-if="application.status === 'pending'"
-                      variant="default"
-                      size="sm"
-                      @click="openApproveDialog(application)"
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      v-if="application.status === 'pending'"
-                      variant="destructive"
-                      size="sm"
-                      @click="openRejectDialog(application)"
-                    >
-                      Reject
-                    </Button>
-                  </div>
-                </td>
-              </tr>
+                      {{
+                        application.status.charAt(0).toUpperCase() +
+                        application.status.slice(1)
+                      }}
+                    </span>
+                  </td>
+                  <td class="p-4 align-middle text-right">
+                    <div class="flex justify-end gap-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        @click="openReviewDialog(application)"
+                      >
+                        Review
+                      </Button>
+                      <Button
+                        v-if="application.status === 'pending'"
+                        variant="default"
+                        size="sm"
+                        @click="openApproveDialog(application)"
+                      >
+                        Approve
+                      </Button>
+                      <Button
+                        v-if="application.status === 'pending'"
+                        variant="destructive"
+                        size="sm"
+                        @click="openRejectDialog(application)"
+                      >
+                        Reject
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              </template>
             </tbody>
           </table>
         </div>
@@ -355,10 +437,20 @@ onMounted(async () => {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" @click="isApproveDialogOpen = false"
-            >Cancel</Button
+          <Button 
+            variant="outline" 
+            @click="isApproveDialogOpen = false"
+            :disabled="isSubmitting"
           >
-          <Button @click="approveApplication">Approve</Button>
+            Cancel
+          </Button>
+          <Button 
+            @click="approveApplication"
+            :disabled="isSubmitting"
+          >
+            <div v-if="isSubmitting" class="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"></div>
+            {{ isSubmitting ? 'Approving...' : 'Approve' }}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -400,12 +492,21 @@ onMounted(async () => {
         </div>
 
         <DialogFooter>
-          <Button variant="outline" @click="isRejectDialogOpen = false"
-            >Cancel</Button
+          <Button 
+            variant="outline" 
+            @click="isRejectDialogOpen = false"
+            :disabled="isSubmitting"
           >
-          <Button variant="destructive" @click="rejectApplication"
-            >Reject</Button
+            Cancel
+          </Button>
+          <Button 
+            variant="destructive" 
+            @click="rejectApplication"
+            :disabled="isSubmitting"
           >
+            <div v-if="isSubmitting" class="animate-spin w-4 h-4 border-2 border-current border-t-transparent rounded-full mr-2"></div>
+            {{ isSubmitting ? 'Rejecting...' : 'Reject' }}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

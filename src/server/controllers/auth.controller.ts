@@ -140,6 +140,16 @@ export class AuthController {
         return sendError(res, 404, "User not found");
       }
 
+      let operatorStates = null;
+
+      // IF role is "operator" then need to get operator states
+      if (user.user_role === "operator") {
+        operatorStates = await db("states")
+          .where({ state_code: user.user_state })
+          .select("state_title", "state_code", "state_flag")
+          .first();
+      }
+
       // Generate tokens
       const tokenPayload = {
         id: user.user_id,
@@ -178,6 +188,7 @@ export class AuthController {
         res,
         {
           user: userWithoutPassword,
+          operator_states: operatorStates,
           access_token: accessToken,
         },
         "Login successful"

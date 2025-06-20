@@ -1,7 +1,7 @@
 import { ofetch } from "ofetch";
 import { useAuthStore } from "@/stores/auth";
 
-const backendUrl = "http://localhost:3001";
+const backendUrl = "http://localhost:3002";
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {

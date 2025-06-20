@@ -132,18 +132,30 @@ export const useAuthStore = defineStore("auth", () => {
     localStorage.removeItem("csrf_token");
   };
 
-  const setUser = (user: any) => {
-    user.value = user;
+  const setUser = (userData: any) => {
+    // Update the reactive user ref with proper User interface
+    user.value = {
+      id: userData.user.user_id || userData.user.id || "",
+      fullname: userData.user.user_fullname,
+      email: userData.user.user_email,
+      user_type: userData.user.user_role,
+      avatar: userData.user.avatar || "",
+    };
+
+    // Also update localStorage (keeping the existing structure for compatibility)
     localStorage.setItem(
       "user",
       JSON.stringify({
-        fullname: user.user.user_fullname,
-        email: user.user.user_email,
-        user_type: user.user.user_role,
-        access_token: user.access_token,
+        fullname: userData.user.user_fullname,
+        email: userData.user.user_email,
+        user_type: userData.user.user_role,
+        access_token: userData.access_token,
         isAuthenticated: true,
       })
     );
+
+    // Update access token
+    accessToken.value = userData.access_token;
   };
 
   const getUser = () => {
@@ -152,9 +164,24 @@ export const useAuthStore = defineStore("auth", () => {
   };
 
   const logoutUser = () => {
+    // Clear reactive user ref
+    user.value = null;
+    accessToken.value = null;
+    csrfToken.value = null;
+
+    // Clear localStorage
     localStorage.removeItem("user");
     localStorage.removeItem("access_token");
     localStorage.removeItem("csrf_token");
+  };
+
+  const setOperatorStates = (states: any) => {
+    localStorage.setItem("operator_states", JSON.stringify(states));
+  };
+
+  const getOperatorStates = () => {
+    const operatorStates = localStorage.getItem("operator_states");
+    return operatorStates ? JSON.parse(operatorStates) : null;
   };
 
   return {
@@ -172,5 +199,7 @@ export const useAuthStore = defineStore("auth", () => {
     setUser,
     getUser,
     logoutUser,
+    setOperatorStates,
+    getOperatorStates,
   };
 });
