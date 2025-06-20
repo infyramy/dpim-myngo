@@ -6,7 +6,7 @@
 # =============================================================================
 FROM node:20-alpine AS builder
 
-# Install system dependencies for native modules
+# Install build dependencies
 RUN apk add --no-cache \
     python3 \
     make \
@@ -15,52 +15,48 @@ RUN apk add --no-cache \
 # Install pnpm globally
 RUN npm install -g pnpm
 
-# Set working directory
 WORKDIR /app
 
-# Copy package files for better layer caching
+# Copy package files
 COPY package.json pnpm-lock.yaml ./
 
 # Install dependencies with production optimization
-RUN pnpm install --frozen-lockfile --ignore-scripts
+RUN pnpm install --no-frozen-lockfile --ignore-scripts
 
 # Copy source code
 COPY . .
 
-# Build the frontend application
-RUN pnpm run build:frontend
+# Build the application
+RUN pnpm run build
 
 # =============================================================================
 # Stage 2: Production Runtime
 # =============================================================================
 FROM node:20-alpine AS production
 
-# Install serve for static file hosting and curl for health checks
+# Install curl for health checks and serve for static hosting
 RUN apk add --no-cache curl && \
     npm install -g serve
 
-# Create non-root user for security
-RUN addgroup -g 1001 -S appuser && \
-    adduser -S appuser -u 1001
-
-# Set working directory
 WORKDIR /app
 
-# Copy built files from builder stage
+# Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./package.json
 
-# Change ownership to non-root user
-RUN chown -R appuser:appuser /app
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nextjs -u 1001 && \
+    chown -R nextjs:nodejs /app
 
-# Switch to non-root user
-USER appuser
+USER nextjs
 
-# Expose port 3000 (standard for Coolify)
+# Expose port 3000 (Coolify standard)
 EXPOSE 3000
 
-# Add health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3000/ || exit 1
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000 || exit 1
 
 # Start the application
-CMD ["serve", "-s", "dist", "-l", "3000", "--no-clipboard"]
+CMD ["serve", "-s", "dist", "-p", "3000"]
