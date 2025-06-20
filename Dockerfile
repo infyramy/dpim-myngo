@@ -1,18 +1,17 @@
-# 🚀 Universal Dockerfile for Vue.js - Works Everywhere!
-# Build arguments to control deployment type
-ARG DEPLOYMENT_TYPE=production
-ARG PORT=3000
+# =============================================================================
+# Production Dockerfile for Coolify (Single Container)
+# Frontend (Nginx) + Backend (Node.js) in one container
+# =============================================================================
 
-# =============================================================================
-# Stage 1: Builder (Common for all deployments)
-# =============================================================================
+# Build stage
 FROM node:20-alpine AS builder
 
-# Install system dependencies required for node-gyp builds
+# Install system dependencies for node-gyp
 RUN apk add --no-cache \
     python3 \
     make \
-    g++
+    g++ \
+    git
 
 # Install pnpm globally
 RUN npm install -g pnpm
@@ -20,89 +19,102 @@ RUN npm install -g pnpm
 # Set working directory
 WORKDIR /app
 
-# Copy package files first for better layer caching
+# Copy package files for better layer caching
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies with Docker-optimized flags
-RUN pnpm install --no-frozen-lockfile --ignore-scripts
+# Install dependencies
+RUN pnpm install --frozen-lockfile --production=false
 
 # Copy source code
 COPY . .
 
-# Build the application using Docker-friendly build command
-RUN pnpm run build:frontend
+# Build both frontend and backend
+RUN pnpm run build:frontend && pnpm run build:backend
 
-# =============================================================================
-# Stage 2: Production with Nginx (for production deployments)
-# =============================================================================
+# Production stage with Nginx + Node.js
 FROM nginx:alpine AS production
 
-# Install curl for health checks
-RUN apk add --no-cache curl
+# Install Node.js, curl, and supervisor for process management
+RUN apk add --no-cache \
+    nodejs \
+    npm \
+    curl \
+    supervisor
 
-# Copy built files from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
+# Install PM2 for Node.js process management
+RUN npm install -g pm2
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-# Create nginx user and set permissions
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx && \
-    chown -R nginx:nginx /etc/nginx/conf.d && \
-    touch /var/run/nginx.pid && \
-    chown -R nginx:nginx /var/run/nginx.pid
-
-# Switch to nginx user
-USER nginx
-
-# Expose port from nginx.conf
-EXPOSE 3100
-
-# Health check using curl
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3100/ || exit 1
-
-# Start nginx
-CMD ["nginx", "-g", "daemon off;"]
-
-# =============================================================================
-# Stage 3: Simple Server (for Coolify, Vercel, Railway, etc.)
-# =============================================================================
-FROM node:20-alpine AS simple
-
-# Install wget for health checks and serve for static hosting
-RUN apk add --no-cache wget && \
-    npm install -g serve
-
-# Create non-root user
+# Create non-root user for Node.js
 RUN addgroup -g 1001 -S appuser && \
     adduser -S appuser -u 1001
 
-# Set working directory
+# Set working directory for backend
 WORKDIR /app
 
-# Copy built files from builder stage
-COPY --from=builder /app/dist ./dist
+# Copy package.json and install production dependencies
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && \
+    pnpm install --frozen-lockfile --production=true
 
-# Change ownership
-RUN chown -R appuser:appuser /app
+# Copy built backend from builder stage
+COPY --from=builder /app/dist/server ./dist/server
+COPY --from=builder /app/src/server/migrations ./src/server/migrations
 
-# Switch to non-root user
-USER appuser
+# Copy built frontend from builder stage to nginx directory
+COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Expose port 3000 (standard for most platforms)
+# Copy custom nginx configuration for single container
+COPY nginx.single.conf /etc/nginx/conf.d/default.conf
+
+# Create PM2 ecosystem file for backend
+RUN echo 'module.exports = {\n\
+  apps: [{\n\
+    name: "myngo-backend",\n\
+    script: "dist/server/index.js",\n\
+    instances: 1,\n\
+    autorestart: true,\n\
+    watch: false,\n\
+    max_memory_restart: "1G",\n\
+    env: {\n\
+      NODE_ENV: "production",\n\
+      API_PORT: process.env.API_PORT || 3001,\n\
+      API_HOST: "127.0.0.1"\n\
+    }\n\
+  }]\n\
+};' > ecosystem.config.js
+
+# Create supervisor configuration
+RUN echo '[supervisord]\n\
+nodaemon=true\n\
+user=root\n\
+\n\
+[program:nginx]\n\
+command=nginx -g "daemon off;"\n\
+stdout_logfile=/var/log/nginx/access.log\n\
+stderr_logfile=/var/log/nginx/error.log\n\
+autorestart=true\n\
+\n\
+[program:backend]\n\
+command=pm2-runtime start ecosystem.config.js\n\
+directory=/app\n\
+user=appuser\n\
+stdout_logfile=/var/log/backend.log\n\
+stderr_logfile=/var/log/backend.log\n\
+autorestart=true' > /etc/supervisor/conf.d/supervisord.conf
+
+# Set proper permissions
+RUN chown -R appuser:appuser /app && \
+    chown -R nginx:nginx /usr/share/nginx/html && \
+    mkdir -p /var/log/nginx && \
+    touch /var/log/backend.log && \
+    chmod 666 /var/log/backend.log
+
+# Expose port 3000 for the combined service
 EXPOSE 3000
 
-# Health check using wget
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+# Health check for both services
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD curl -f http://localhost:3000/nginx-health && curl -f http://localhost:3001/health || exit 1
 
-# Start serve
-CMD ["serve", "-s", "dist", "-l", "3000"]
-
-# =============================================================================
-# Stage 4: Universal (Auto-detect or manual selection)
-# =============================================================================
-FROM ${DEPLOYMENT_TYPE} AS final
+# Start both services with supervisor
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
