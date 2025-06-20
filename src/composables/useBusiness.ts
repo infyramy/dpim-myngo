@@ -67,6 +67,11 @@ export function useBusiness() {
       errors.category = "Business category is required";
     }
 
+    // MOF Registration Number validation
+    if (formData.mofRegistration && !formData.mofRegistrationNumber?.trim()) {
+      errors.mofRegistrationNumber = "MOF Registration Number is required when MOF Registration is selected";
+    }
+
     // Optional URL validation
     if (formData.url && formData.url.trim()) {
       const urlPattern = /^https?:\/\/.+\..+/;
@@ -132,6 +137,7 @@ export function useBusiness() {
         sector: formData.sector as any,
         category: formData.category as any,
         mofRegistration: formData.mofRegistration,
+        mofRegistrationNumber: formData.mofRegistrationNumber?.trim() || "",
         ...(formData.url?.trim() ? { url: formData.url.trim() } : {}),
         createdAt: new Date(),
       };
@@ -234,6 +240,7 @@ export function useBusiness() {
     sector: "",
     category: "",
     mofRegistration: false,
+    mofRegistrationNumber: "",
     url: "",
   });
 
@@ -246,6 +253,7 @@ export function useBusiness() {
     sector: business.sector,
     category: business.category,
     mofRegistration: business.mofRegistration,
+    mofRegistrationNumber: business.mofRegistrationNumber || "",
     url: business.url || "",
   });
 

@@ -25,6 +25,7 @@ export class BusinessesController {
           "b_sector as sector",
           "b_category as category",
           "b_mof_registration as mofRegistration",
+          "b_mof_registration_number as mofRegistrationNumber",
           "b_url as url",
           "b_created_at as createdAt",
           "b_modified_at as modifiedAt"
@@ -64,6 +65,7 @@ export class BusinessesController {
         sector,
         category,
         mofRegistration,
+        mofRegistrationNumber,
         url,
       } = req.body;
 
@@ -78,6 +80,11 @@ export class BusinessesController {
         !category
       ) {
         return sendError(res, 400, "All required fields must be provided");
+      }
+
+      // Validate MOF Registration Number if MOF Registration is true
+      if (mofRegistration && !mofRegistrationNumber?.trim()) {
+        return sendError(res, 400, "MOF Registration Number is required when MOF Registration is selected");
       }
 
       // Validate SSM number format (should be 12 digits)
@@ -133,6 +140,7 @@ export class BusinessesController {
         b_sector: sector,
         b_category: category,
         b_mof_registration: mofRegistration ? 1 : 0,
+        b_mof_registration_number: mofRegistration ? mofRegistrationNumber?.trim() || null : null,
         b_url: url?.trim() || null,
         b_user_id: userId,
         b_status: 1, // Active status
@@ -153,6 +161,7 @@ export class BusinessesController {
           "b_sector as sector",
           "b_category as category",
           "b_mof_registration as mofRegistration",
+          "b_mof_registration_number as mofRegistrationNumber",
           "b_url as url",
           "b_created_at as createdAt",
           "b_modified_at as modifiedAt"
@@ -163,7 +172,7 @@ export class BusinessesController {
       // Convert mofRegistered to boolean
       const formattedBusiness = {
         ...createdBusiness,
-        mofRegistered: createdBusiness.mofRegistered === 1,
+        mofRegistration: createdBusiness.mofRegistration === 1,
       };
 
       return sendSuccess(
@@ -192,6 +201,7 @@ export class BusinessesController {
         sector,
         category,
         mofRegistration,
+        mofRegistrationNumber,
         url,
       } = req.body;
 
@@ -228,6 +238,11 @@ export class BusinessesController {
         !category
       ) {
         return sendError(res, 400, "All required fields must be provided");
+      }
+
+      // Validate MOF Registration Number if MOF Registration is true
+      if (mofRegistration && !mofRegistrationNumber?.trim()) {
+        return sendError(res, 400, "MOF Registration Number is required when MOF Registration is selected");
       }
 
       // Validate SSM number format (should be 12 digits)
@@ -279,6 +294,7 @@ export class BusinessesController {
         b_sector: sector,
         b_category: category,
         b_mof_registration: mofRegistration ? 1 : 0,
+        b_mof_registration_number: mofRegistration ? mofRegistrationNumber?.trim() || null : null,
         b_url: url?.trim() || null,
         b_modified_at: new Date(),
       };
@@ -301,6 +317,7 @@ export class BusinessesController {
           "b_sector as sector",
           "b_category as category",
           "b_mof_registration as mofRegistration",
+          "b_mof_registration_number as mofRegistrationNumber",
           "b_url as url",
           "b_created_at as createdAt",
           "b_modified_at as modifiedAt"
@@ -404,6 +421,7 @@ export class BusinessesController {
           "b_sector as sector",
           "b_category as category",
           "b_mof_registration as mofRegistration",
+          "b_mof_registration_number as mofRegistrationNumber",
           "b_url as url",
           "b_created_at as createdAt",
           "b_modified_at as modifiedAt"

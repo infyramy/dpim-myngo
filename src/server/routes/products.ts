@@ -4,7 +4,11 @@ import { authenticateToken } from "../middleware/auth";
 
 const router = Router();
 
-// Apply authentication middleware to all routes
+// Public routes for product matching (no auth required)
+router.get("/all", ProductsController.getAllProducts);
+router.get("/tags/all-public", ProductsController.getAllTags);
+
+// Apply authentication middleware to all other routes
 router.use(authenticateToken);
 
 router.get("/", ProductsController.getProducts);

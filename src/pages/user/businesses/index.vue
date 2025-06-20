@@ -14,7 +14,7 @@
         class="flex items-center gap-2"
       >
         <PlusIcon class="h-4 w-4" />
-        Add Business
+        Business Form
       </Button>
     </div>
 
@@ -259,6 +259,14 @@
                     {{ getBusinessCategoryLabel(business.category) }}
                   </span>
                 </div>
+                <div v-if="business.mofRegistration && business.mofRegistrationNumber" class="flex items-center gap-2">
+                  <ShieldCheckIcon
+                    class="h-4 w-4 text-muted-foreground flex-shrink-0"
+                  />
+                  <span class="text-muted-foreground">
+                    MOF: {{ business.mofRegistrationNumber }}
+                  </span>
+                </div>
                 <div v-if="business.url" class="flex items-center gap-2">
                   <GlobeIcon
                     class="h-4 w-4 text-muted-foreground flex-shrink-0"
@@ -344,7 +352,7 @@
             class="flex items-center gap-2"
           >
             <PlusIcon class="h-4 w-4" />
-            Add Business
+            Business Form
           </Button>
         </div>
       </div>
@@ -627,6 +635,7 @@ import {
   EyeIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  ShieldCheckIcon,
 } from "lucide-vue-next";
 
 // Types and composables

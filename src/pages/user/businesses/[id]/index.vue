@@ -230,6 +230,29 @@
                 </RadioGroup>
               </div>
 
+              <!-- MOF Registration Number (conditional) -->
+              <div v-if="formData.mofRegistration">
+                <Label for="mofRegistrationNumber" class="text-sm font-medium">
+                  MOF Registration Number <span class="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="mofRegistrationNumber"
+                  v-model="formData.mofRegistrationNumber"
+                  placeholder="MOF registration number"
+                  :class="{
+                    'border-red-500': formErrors.mofRegistrationNumber,
+                  }"
+                  class="mt-1"
+                  required
+                />
+                <p
+                  v-if="formErrors.mofRegistrationNumber"
+                  class="text-red-500 text-xs mt-1"
+                >
+                  {{ formErrors.mofRegistrationNumber }}
+                </p>
+              </div>
+
               <!-- Business URL -->
               <div class="md:col-span-2">
                 <Label for="businessUrl" class="text-sm font-medium">
@@ -343,6 +366,7 @@ const formData = ref<BusinessFormData>({
   sector: "",
   category: "",
   mofRegistration: false,
+  mofRegistrationNumber: "",
   url: "",
 });
 const formErrors = ref<BusinessValidationErrors>({});
@@ -361,7 +385,7 @@ const loadBusiness = async () => {
     isLoading.value = true;
     error.value = null;
 
-    const response = await apiFetching().get(`/businesses/${businessId}`);
+    const response = await apiFetching().get(`/businesses/${businessId}`, true);
 
     console.log("response.data: ", response.data.business);
 
@@ -391,6 +415,7 @@ const handleSubmit = async () => {
       element.scrollIntoView({ behavior: "smooth", block: "center" });
       element.focus();
     }
+    isSubmitting.value = false;
     return;
   }
 
@@ -403,11 +428,10 @@ const handleSubmit = async () => {
 
     setTimeout(() => {
       toast.success(response.message);
-      isSubmitting.value = false;
+      router.push("/user/businesses");
     }, 1000);
   } catch (error: any) {
     console.error("Update business error:", error.data.message);
-
     toast.error(error.data.message || "Failed to update business");
     isSubmitting.value = false;
   }
@@ -423,6 +447,7 @@ const getFieldId = (errorKey: string): string => {
     type: "businessType",
     sector: "businessSector",
     category: "businessCategory",
+    mofRegistrationNumber: "mofRegistrationNumber",
     url: "businessUrl",
   };
   return fieldIdMap[errorKey] || errorKey;

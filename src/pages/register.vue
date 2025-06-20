@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { DatePicker } from "@/components/ui/date-picker";
+import { BirthDatePicker } from "@/components/ui/date-picker";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "vue-sonner";
 import { Badge } from "@/components/ui/badge";
@@ -25,88 +25,7 @@ interface State {
 }
 
 // Malaysian States Data with flags
-const malaysianStates = ref<State[]>([
-  {
-    title: "Johor",
-    code: "01",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/5/5a/Flag_of_Johor.svg/1280px-Flag_of_Johor.svg.png",
-  },
-  {
-    title: "Kedah",
-    code: "02",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/c/cc/Flag_of_Kedah.svg/2560px-Flag_of_Kedah.svg.png",
-  },
-  {
-    title: "Kelantan",
-    code: "03",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/61/Flag_of_Kelantan.svg/2560px-Flag_of_Kelantan.svg.png",
-  },
-  {
-    title: "Melaka",
-    code: "04",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/09/Flag_of_Malacca.svg/1200px-Flag_of_Malacca.svg.png",
-  },
-  {
-    title: "Negeri Sembilan",
-    code: "05",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/db/Flag_of_Negeri_Sembilan.svg/1280px-Flag_of_Negeri_Sembilan.svg.png",
-  },
-  {
-    title: "Pahang",
-    code: "06",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Flag_of_Pahang.svg/1280px-Flag_of_Pahang.svg.png",
-  },
-  {
-    title: "Perak",
-    code: "07",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Flag_of_Perak.svg/1600px-Flag_of_Perak.svg.png",
-  },
-  {
-    title: "Perlis",
-    code: "08",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/a/aa/Flag_of_Perlis.svg/2560px-Flag_of_Perlis.svg.png",
-  },
-  {
-    title: "Pulau Pinang",
-    code: "10",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d4/Flag_of_Penang_%28Malaysia%29.svg/1200px-Flag_of_Penang_%28Malaysia%29.svg.png",
-  },
-  {
-    title: "Terengganu",
-    code: "11",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6b/Flag_of_Terengganu.svg/1200px-Flag_of_Terengganu.svg.png",
-  },
-  {
-    title: "Sabah",
-    code: "12",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Flag_of_Sabah.svg/1200px-Flag_of_Sabah.svg.png",
-  },
-  {
-    title: "Sarawak",
-    code: "13",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/7/7e/Flag_of_Sarawak.svg/1200px-Flag_of_Sarawak.svg.png",
-  },
-  {
-    title: "Selangor",
-    code: "14",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/0/0c/Flag_of_Selangor.svg/2560px-Flag_of_Selangor.svg.png",
-  },
-  {
-    title: "Kuala Lumpur",
-    code: "15",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/64/Flag_of_Kuala_Lumpur%2C_Malaysia.svg/1200px-Flag_of_Kuala_Lumpur%2C_Malaysia.svg.png",
-  },
-  {
-    title: "Labuan",
-    code: "16",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/6/69/Flag_of_Labuan.svg/1280px-Flag_of_Labuan.svg.png",
-  },
-  {
-    title: "Putrajaya",
-    code: "17",
-    flag: "https://upload.wikimedia.org/wikipedia/commons/thumb/9/9f/Flag_of_Putrajaya.svg/2560px-Flag_of_Putrajaya.svg.png",
-  },
-]);
+const malaysianStates = ref<State[]>([]);
 
 const router = useRouter();
 
@@ -228,6 +147,10 @@ async function handleSubmit() {
       state: selectedState.value,
       ...formData.value,
       mykadNumber: cleanMykadNumber(formData.value.mykadNumber), // Remove dashes for API
+      mobilePhone: formatPhoneForApi(formData.value.mobilePhone), // Format phone with +60 prefix
+      spouseMobilePhone: formData.value.spouseMobilePhone 
+        ? formatPhoneForApi(formData.value.spouseMobilePhone) 
+        : "", // Format spouse phone if provided
     };
 
     // Make API call to register endpoint
@@ -292,6 +215,19 @@ function validatePhone(phone: string) {
   const cleanPhone = phone.replace(/[\s-]/g, "");
   const phonePattern = /^(01[0-9]|1[0-9])[0-9]{7,8}$/;
   return phonePattern.test(cleanPhone);
+}
+
+function formatPhoneForApi(phone: string) {
+  // Clean the phone number by removing spaces and dashes
+  let cleanPhone = phone.replace(/[\s-]/g, "");
+  
+  // If phone starts with 0, remove it (since +60 already includes the country code)
+  if (cleanPhone.startsWith('0')) {
+    cleanPhone = cleanPhone.substring(1);
+  }
+  
+  // Add +60 prefix
+  return `+60${cleanPhone}`;
 }
 
 function validateField(field: string, value: string) {
@@ -500,7 +436,7 @@ onMounted(async () => {
 
             <div class="space-y-2">
               <Label for="dateOfBirth">Date of Birth</Label>
-              <DatePicker
+              <BirthDatePicker
                 v-model="formData.dateOfBirth"
                 placeholder="Select your birth date"
               />

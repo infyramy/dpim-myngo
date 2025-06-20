@@ -107,7 +107,7 @@
               </div>
             </div>
 
-            <!-- Quick Filter Categories -->
+            <!-- Quick Filter Tags -->
             <div class="flex flex-wrap gap-3 justify-center">
               <Button
                 v-for="quickFilter in quickFilters"
@@ -117,7 +117,7 @@
                 class="rounded-full hover:bg-accent hover:text-accent-foreground transition-colors"
                 @click="applyQuickFilter(quickFilter)"
               >
-                <component :is="quickFilter.icon" class="h-4 w-4 mr-2" />
+                <TagIcon class="h-4 w-4 mr-2" />
                 {{ quickFilter.label }}
               </Button>
             </div>
@@ -233,56 +233,6 @@
         </CollapsibleContent>
       </Collapsible>
     </div>
-
-    <!-- Results Summary with Sort -->
-    <!-- <div class="flex items-center justify-between">
-      <div>
-        <h2 class="text-2xl font-semibold tracking-tight">Search Results</h2>
-        <p class="text-sm text-muted-foreground mt-1">
-          {{ totalResults.toLocaleString() }} results found
-        </p>
-      </div>
-      <div class="flex items-center gap-2">
-        <Label class="text-sm text-muted-foreground">Sort by:</Label>
-        <Select v-model="sortBy" @update:modelValue="performSearch">
-          <SelectTrigger class="w-[180px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="relevance">
-              <div class="flex items-center gap-2">
-                <SparklesIcon class="h-4 w-4" />
-                Relevance
-              </div>
-            </SelectItem>
-            <SelectItem value="newest">
-              <div class="flex items-center gap-2">
-                <ClockIcon class="h-4 w-4" />
-                Newest
-              </div>
-            </SelectItem>
-            <SelectItem value="rating">
-              <div class="flex items-center gap-2">
-                <StarIcon class="h-4 w-4" />
-                Rating
-              </div>
-            </SelectItem>
-            <SelectItem value="name">
-              <div class="flex items-center gap-2">
-                <SortAscIcon class="h-4 w-4" />
-                Name A-Z
-              </div>
-            </SelectItem>
-            <SelectItem value="location">
-              <div class="flex items-center gap-2">
-                <MapPinIcon class="h-4 w-4" />
-                Location
-              </div>
-            </SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-    </div> -->
 
     <!-- Search Results -->
     <div>
@@ -556,60 +506,203 @@
 
             <Separator />
 
+            <!-- Product Link -->
+            <div v-if="selectedProduct.link">
+              <h3 class="font-semibold mb-3">Product Link</h3>
+              <div class="flex items-center gap-2">
+                <a
+                  :href="selectedProduct.link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-blue-600 hover:text-blue-800 underline text-sm break-all"
+                >
+                  {{ selectedProduct.link }}
+                </a>
+                <button
+                  @click="copyToClipboard(selectedProduct.link)"
+                  class="text-gray-500 hover:text-gray-700 text-xs"
+                  type="button"
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+
+            <Separator />
+
             <!-- Business Information -->
             <div>
-              <h3 class="font-semibold mb-3">Business Information</h3>
-              <div class="space-y-3">
-                <div class="flex items-center gap-3">
-                  <BuildingIcon class="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p class="font-medium">
-                      {{ selectedProduct.businessName }}
-                    </p>
-                    <p class="text-sm text-muted-foreground">
-                      {{ selectedProduct.businessType }}
-                    </p>
-                  </div>
-                </div>
-
-                <div class="flex items-center gap-3">
-                  <MapPinIcon class="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <p class="text-sm">{{ selectedProduct.location }}</p>
-                    <p class="text-sm text-muted-foreground">
-                      {{ selectedProduct.fullAddress }}
-                    </p>
-                  </div>
-                </div>
-
-                <div
-                  v-if="selectedProduct.contact?.phone"
-                  class="flex items-center gap-3"
-                >
-                  <PhoneIcon class="h-5 w-5 text-muted-foreground" />
-                  <p class="text-sm">{{ selectedProduct.contact.phone }}</p>
-                </div>
-
-                <div
-                  v-if="selectedProduct.contact?.email"
-                  class="flex items-center gap-3"
-                >
-                  <MailIcon class="h-5 w-5 text-muted-foreground" />
-                  <p class="text-sm">{{ selectedProduct.contact.email }}</p>
-                </div>
-
-                <div
-                  v-if="selectedProduct.contact?.website"
-                  class="flex items-center gap-3"
-                >
-                  <GlobeIcon class="h-5 w-5 text-muted-foreground" />
-                  <a
-                    :href="selectedProduct.contact.website"
-                    target="_blank"
-                    class="text-sm text-primary hover:underline"
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="font-semibold">Business Information</h3>
+                <div class="flex gap-2">
+                  <Badge
+                    v-if="selectedProduct.business?.mofRegistration"
+                    variant="default"
+                    class="text-xs bg-green-500"
                   >
-                    {{ selectedProduct.contact.website }}
-                  </a>
+                    <ShieldCheckIcon class="h-3 w-3 mr-1" />
+                    MOF Registered
+                  </Badge>
+                  <Badge variant="secondary" class="text-xs">
+                    {{ getBusinessTypeLabel(selectedProduct.business?.type) }}
+                  </Badge>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Left Column -->
+                <div class="space-y-4">
+                  <!-- Business Name & Type -->
+                  <div class="flex items-start gap-3">
+                    <BuildingIcon
+                      class="h-5 w-5 text-muted-foreground mt-0.5"
+                    />
+                    <div class="min-w-0 flex-1">
+                      <p class="font-medium truncate">
+                        {{
+                          selectedProduct.business?.name ||
+                          selectedProduct.businessName
+                        }}
+                      </p>
+                      <p class="text-sm text-muted-foreground">
+                        {{
+                          getBusinessTypeLabel(
+                            selectedProduct.business?.type
+                          ) || selectedProduct.businessType
+                        }}
+                      </p>
+                      <p
+                        v-if="selectedProduct.business?.ssm"
+                        class="text-xs text-muted-foreground"
+                      >
+                        SSM: {{ selectedProduct.business.ssm }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Address -->
+                  <div class="flex items-start gap-3">
+                    <MapPinIcon class="h-5 w-5 text-muted-foreground mt-0.5" />
+                    <div class="min-w-0 flex-1">
+                      <p class="text-sm">
+                        {{
+                          selectedProduct.business?.address ||
+                          selectedProduct.location
+                        }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Contact Info -->
+                  <div
+                    v-if="
+                      selectedProduct.business?.phone ||
+                      selectedProduct.contact?.phone
+                    "
+                    class="flex items-center gap-3"
+                  >
+                    <PhoneIcon class="h-5 w-5 text-muted-foreground" />
+                    <p class="text-sm">
+                      {{
+                        selectedProduct.business?.phone ||
+                        selectedProduct.contact?.phone
+                      }}
+                    </p>
+                  </div>
+
+                  <div
+                    v-if="
+                      selectedProduct.business?.url ||
+                      selectedProduct.contact?.website
+                    "
+                    class="flex items-center gap-3"
+                  >
+                    <GlobeIcon class="h-5 w-5 text-muted-foreground" />
+                    <a
+                      :href="
+                        selectedProduct.business?.url ||
+                        selectedProduct.contact?.website
+                      "
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="text-sm text-primary hover:underline truncate"
+                    >
+                      {{
+                        selectedProduct.business?.url ||
+                        selectedProduct.contact?.website
+                      }}
+                    </a>
+                  </div>
+                </div>
+
+                <!-- Right Column -->
+                <div class="space-y-4">
+                  <!-- Business Sector -->
+                  <div
+                    v-if="selectedProduct.business?.sector"
+                    class="flex items-center gap-3"
+                  >
+                    <TagIcon class="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p class="text-sm font-medium">Business Sector</p>
+                      <p class="text-sm text-muted-foreground">
+                        {{
+                          getBusinessSectorLabel(
+                            selectedProduct.business.sector
+                          )
+                        }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Business Category -->
+                  <div
+                    v-if="selectedProduct.business?.category"
+                    class="flex items-center gap-3"
+                  >
+                    <BuildingIcon class="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p class="text-sm font-medium">Business Category</p>
+                      <p class="text-sm text-muted-foreground">
+                        {{
+                          getBusinessCategoryLabel(
+                            selectedProduct.business.category
+                          )
+                        }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- MOF Registration -->
+                  <div
+                    v-if="
+                      selectedProduct.business?.mofRegistration &&
+                      selectedProduct.business?.mofRegistrationNumber
+                    "
+                    class="flex items-center gap-3"
+                  >
+                    <ShieldCheckIcon class="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p class="text-sm font-medium">MOF Registration</p>
+                      <p class="text-sm text-muted-foreground">
+                        {{ selectedProduct.business.mofRegistrationNumber }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Business Established -->
+                  <div
+                    v-if="selectedProduct.business?.createdAt"
+                    class="flex items-center gap-3"
+                  >
+                    <CalendarIcon class="h-5 w-5 text-muted-foreground" />
+                    <div>
+                      <p class="text-sm font-medium">Registered</p>
+                      <p class="text-sm text-muted-foreground">
+                        {{ formatDate(selectedProduct.business.createdAt) }}
+                      </p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -620,6 +713,15 @@
         <DialogFooter class="px-6 py-4 border-t gap-2">
           <Button variant="outline" @click="showProductDetailDialog = false">
             Close
+          </Button>
+          <Button
+            v-if="selectedProduct?.link"
+            variant="secondary"
+            class="flex items-center gap-2"
+            @click="visitProductLink"
+          >
+            <GlobeIcon class="h-4 w-4" />
+            Visit Product
           </Button>
           <Button class="flex items-center gap-2" @click="contactBusiness">
             <MailIcon class="h-4 w-4" />
@@ -671,6 +773,8 @@ import {
   TrashIcon,
   SlidersHorizontalIcon,
   ChevronDownIcon,
+  CalendarIcon,
+  ShieldCheckIcon,
 } from "lucide-vue-next";
 import {
   Collapsible,
@@ -686,6 +790,21 @@ interface Tag {
   id: number;
   name: string;
   slug: string;
+}
+
+interface Business {
+  id: number;
+  name: string;
+  ssm: string;
+  phone: string;
+  address: string;
+  type: string;
+  sector: string;
+  category: string;
+  mofRegistration: boolean;
+  mofRegistrationNumber?: string;
+  url?: string;
+  createdAt: string;
 }
 
 interface Product {
@@ -704,6 +823,8 @@ interface Product {
   isVerified?: boolean;
   tags: Tag[];
   features?: string[];
+  link?: string;
+  business?: Business;
   contact?: {
     phone: string;
     email?: string;
@@ -743,6 +864,7 @@ const allTags = ref<Tag[]>([]);
 // Filters
 const filters = ref({
   category: "all",
+  tag: "all",
 });
 
 // Filter options
@@ -781,32 +903,15 @@ const searchSuggestions = ref([
   { text: "Smart Building IoT", icon: "HammerIcon", category: "Construction" },
 ]);
 
-const quickFilters = ref([
-  {
-    label: "Electronics",
-    value: "electronics",
-    icon: "SmartphoneIcon",
-    type: "category",
-  },
-  {
-    label: "Food & Beverages",
-    value: "food",
-    icon: "UtensilsIcon",
-    type: "category",
-  },
-  {
-    label: "Services",
-    value: "services",
-    icon: "BriefcaseIcon",
-    type: "category",
-  },
-  {
-    label: "Clothing",
-    value: "clothing",
-    icon: "ShirtIcon",
-    type: "category",
-  },
-]);
+// Quick filters computed from tags
+const quickFilters = computed(() => {
+  return allTags.value.slice(0, 8).map((tag) => ({
+    label: tag.name,
+    value: tag.slug,
+    icon: "TagIcon",
+    type: "tag",
+  }));
+});
 
 // fetchProductCategories
 const fetchProductCategories = async () => {
@@ -829,30 +934,26 @@ const fetchAllProducts = async () => {
     isLoading.value = true;
     error.value = null;
 
-    // For now, we'll use the same products endpoint - in a real scenario,
-    // this would be a public products endpoint that returns all products for matching
-    const response = await apiFetching().get("/products", true);
+    // Fetch all products from all users (no auth required)
+    const response = await apiFetching().get("/products/all", false);
 
     if (response.success && response.data?.products) {
       // Transform the products to match our interface
       allProducts.value = response.data.products.map((product: any) => ({
         ...product,
-        businessName: product.businessName || "Business Name Not Available",
-        businessType: product.businessType || "Sdn Bhd",
+        businessName: product.business?.name || "Business Name Not Available",
+        businessType: product.business?.type || "Unknown",
         market: product.market || "Local",
-        location: product.location || "Malaysia",
-        fullAddress:
-          product.fullAddress || product.location || "Address Not Available",
+        location: product.business?.address || "Malaysia",
+        fullAddress: product.business?.address || "Address Not Available",
         rating: product.rating || 4.5,
         reviewCount:
           product.reviewCount || Math.floor(Math.random() * 200) + 10,
-        isVerified:
-          product.isVerified !== undefined
-            ? product.isVerified
-            : Math.random() > 0.3,
-        contact: product.contact || {
-          phone: "03-XXXX-XXXX",
+        isVerified: product.business?.mofRegistration || false,
+        contact: {
+          phone: product.business?.phone || "03-XXXX-XXXX",
           email: "contact@business.com",
+          website: product.business?.url,
         },
       }));
     } else {
@@ -869,7 +970,11 @@ const fetchAllProducts = async () => {
 
 const fetchAllTags = async () => {
   try {
-    const response = await apiFetching().get("/products/tags/all", true);
+    // Fetch all tags from all users (no auth required)
+    const response = await apiFetching().get(
+      "/products/tags/all-public",
+      false
+    );
 
     if (response.success && response.data?.tags) {
       allTags.value = response.data.tags;
@@ -912,6 +1017,12 @@ const filteredResults = computed(() => {
   if (filters.value.category !== "all") {
     results = results.filter(
       (product) => product.category === filters.value.category
+    );
+  }
+
+  if (filters.value.tag !== "all") {
+    results = results.filter((product) =>
+      product.tags.some((tag) => tag.slug === filters.value.tag)
     );
   }
 
@@ -987,6 +1098,16 @@ const activeFilters = computed(() => {
     });
   }
 
+  if (filters.value.tag !== "all") {
+    const tag = allTags.value.find((t) => t.slug === filters.value.tag);
+    active.push({
+      key: "tag",
+      label: "Tag",
+      value: tag?.name || filters.value.tag,
+      icon: TagIcon,
+    });
+  }
+
   return active;
 });
 
@@ -1005,6 +1126,7 @@ function resetFilters() {
   searchQuery.value = "";
   filters.value = {
     category: "all",
+    tag: "all",
   };
   sortBy.value = "relevance";
   currentPage.value = 1;
@@ -1029,6 +1151,60 @@ function contactBusiness() {
     window.open(`tel:${selectedProduct.value.contact.phone}`, "_blank");
   }
 }
+
+function visitProductLink() {
+  if (selectedProduct.value?.link) {
+    window.open(selectedProduct.value.link, "_blank", "noopener,noreferrer");
+  }
+}
+
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success("Link copied to clipboard!");
+  } catch (err) {
+    console.error("Failed to copy text: ", err);
+    toast.error("Failed to copy link");
+  }
+};
+
+// Helper functions for business labels
+const getBusinessTypeLabel = (type: string): string => {
+  const types: { [key: string]: string } = {
+    "sole-proprietorship": "Sole Proprietorship",
+    partnership: "Partnership",
+    "sdn-bhd": "Sdn Bhd",
+    berhad: "Berhad",
+  };
+  return types[type] || type;
+};
+
+const getBusinessSectorLabel = (sector: string): string => {
+  const sectors: { [key: string]: string } = {
+    manufacturing: "Manufacturing",
+    service: "Service",
+  };
+  return sectors[sector] || sector;
+};
+
+const getBusinessCategoryLabel = (category: string): string => {
+  const categories: { [key: string]: string } = {
+    startup: "Startup",
+    micro: "Micro",
+    small: "Small",
+    medium: "Medium",
+    large: "Large",
+  };
+  return categories[category] || category;
+};
+
+const formatDate = (dateString: string): string => {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+};
 
 // Enhanced methods for modern UI
 const handleSearchInput = () => {
@@ -1056,19 +1232,26 @@ const selectSuggestion = (suggestion: string) => {
 const applyQuickFilter = (filter: any) => {
   if (filter.type === "category") {
     filters.value.category = filter.value;
+  } else if (filter.type === "tag") {
+    filters.value.tag = filter.value;
   }
 
   performSearch();
 };
 
 const removeFilter = (filterKey: string) => {
-  (filters.value as any)[filterKey] = "all";
+  if (filterKey === "category") {
+    filters.value.category = "all";
+  } else if (filterKey === "tag") {
+    filters.value.tag = "all";
+  }
   performSearch();
 };
 
 const clearAllFilters = () => {
   filters.value = {
     category: "all",
+    tag: "all",
   };
   performSearch();
 };

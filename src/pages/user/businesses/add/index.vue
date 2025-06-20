@@ -204,6 +204,27 @@
               </RadioGroup>
             </div>
 
+            <!-- MOF Registration Number (conditional) -->
+            <div v-if="formData.mofRegistration">
+              <Label for="mofRegistrationNumber" class="text-sm font-medium">
+                MOF Registration Number <span class="text-red-500">*</span>
+              </Label>
+              <Input
+                id="mofRegistrationNumber"
+                v-model="formData.mofRegistrationNumber"
+                placeholder="MOF registration number"
+                :class="{ 'border-red-500': formErrors.mofRegistrationNumber }"
+                class="mt-1"
+                required
+              />
+              <p
+                v-if="formErrors.mofRegistrationNumber"
+                class="text-red-500 text-xs mt-1"
+              >
+                {{ formErrors.mofRegistrationNumber }}
+              </p>
+            </div>
+
             <!-- Business URL -->
             <div class="md:col-span-2">
               <Label for="businessUrl" class="text-sm font-medium">
@@ -327,21 +348,23 @@ const handleSubmit = async () => {
     return;
   }
 
+  isSubmitting.value = true;
+
   try {
     const response = await apiFetching().post(
       "/businesses",
       formData.value,
       true
     );
-
     setTimeout(() => {
-      toast.success(response.data.message);
+      toast.success(response.message);
       router.push("/user/businesses");
     }, 1000);
-  } catch (error) {
-    console.error("Create business error:", error);
+  } catch (error: any) {
+    console.error("Create business error:", error.data.message);
+    toast.error(error.data.message);
 
-    toast.error("Failed to create business");
+    isSubmitting.value = false;
   }
 };
 
@@ -355,6 +378,7 @@ const getFieldId = (errorKey: string): string => {
     type: "businessType",
     sector: "businessSector",
     category: "businessCategory",
+    mofRegistrationNumber: "mofRegistrationNumber",
     url: "businessUrl",
   };
   return fieldIdMap[errorKey] || errorKey;

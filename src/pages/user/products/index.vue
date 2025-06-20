@@ -14,7 +14,7 @@
         class="flex items-center gap-2"
       >
         <PlusIcon class="h-4 w-4" />
-        Add Product
+        Product Form
       </Button>
     </div>
 
@@ -346,7 +346,7 @@
             class="flex items-center gap-2"
           >
             <PlusIcon class="h-4 w-4" />
-            Add Product
+            Product Form
           </Button>
         </div>
       </div>
@@ -466,6 +466,30 @@
               <p class="text-sm text-muted-foreground leading-relaxed">
                 {{ selectedProduct.description }}
               </p>
+            </div>
+
+            <Separator />
+
+            <!-- Product Link -->
+            <div v-if="selectedProduct.link">
+              <h3 class="font-semibold mb-3">Product Link</h3>
+              <div class="flex items-center gap-2">
+                <a
+                  :href="selectedProduct.link"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-blue-600 hover:text-blue-800 underline text-sm break-all"
+                >
+                  {{ selectedProduct.link }}
+                </a>
+                <button
+                  @click="copyToClipboard(selectedProduct.link)"
+                  class="text-gray-500 hover:text-gray-700 text-xs"
+                  type="button"
+                >
+                  Copy
+                </button>
+              </div>
             </div>
 
             <Separator />
@@ -651,6 +675,19 @@
               </div>
 
               <div>
+                <Label for="productLink">Product Link</Label>
+                <Input
+                  id="productLink"
+                  v-model="productForm.link"
+                  placeholder="Enter product link (e.g., Shopee, Lazada)"
+                  class="mt-1"
+                />
+                <p class="text-xs text-muted-foreground mt-1">
+                  Add link to your product on external platforms
+                </p>
+              </div>
+
+              <div>
                 <Label for="productTags">Tags</Label>
                 <TagInput
                   id="productTags"
@@ -807,6 +844,7 @@ interface Product {
   businessId: number;
   business?: Business;
   tags: Tag[];
+  link?: string;
   createdAt: string;
   modifiedAt?: string;
 }
@@ -864,6 +902,7 @@ const defaultProductForm = {
   featured: false,
   tags: [] as string[],
   businessId: "",
+  link: "",
 };
 
 const productForm = ref({ ...defaultProductForm });
@@ -1167,6 +1206,7 @@ const editProduct = (product: Product) => {
     featured: product.featured,
     tags: product.tags?.map((tag) => tag.name) || [],
     businessId: product.businessId ? product.businessId.toString() : "",
+    link: product.link || "",
   };
   showProductDetailDialog.value = false;
   showAddProductDialog.value = true;
@@ -1212,6 +1252,7 @@ const saveProduct = async () => {
       featured: productForm.value.featured,
       tags: productForm.value.tags,
       businessId: parseInt(productForm.value.businessId),
+      link: productForm.value.link || null,
     };
 
     if (editingProduct.value) {
@@ -1237,6 +1278,16 @@ const cancelEdit = () => {
 const goToPage = (page: number) => {
   if (page >= 1 && page <= totalPages.value) {
     currentPage.value = page;
+  }
+};
+
+const copyToClipboard = async (text: string) => {
+  try {
+    await navigator.clipboard.writeText(text);
+    toast.success("Link copied to clipboard!");
+  } catch (err) {
+    console.error("Failed to copy text: ", err);
+    toast.error("Failed to copy link");
   }
 };
 

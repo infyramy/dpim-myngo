@@ -8,11 +8,13 @@ import rateLimit from "express-rate-limit";
 
 import authRoutes from "./routes/auth";
 import userRoutes from "./routes/users";
+import profileRoutes from "./routes/profile";
 import statesRoutes from "./routes/states";
 import businessesRoutes from "./routes/businesses";
 import lookupRoutes from "./routes/lookup";
 import productsRoutes from "./routes/products";
 import applicationsRoutes from "./routes/applications";
+import dashboardRoutes from "./routes/dashboard";
 
 const app = express();
 
@@ -43,11 +45,13 @@ app.use(express.urlencoded({ extended: true }));
 // API Routes
 app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
+app.use("/profile", profileRoutes);
 app.use("/states", statesRoutes);
 app.use("/businesses", businessesRoutes);
 app.use("/lookup", lookupRoutes);
 app.use("/products", productsRoutes);
 app.use("/applications", applicationsRoutes);
+app.use("/dashboard", dashboardRoutes);
 
 // Health check
 app.get("/health", (req, res) => {

@@ -139,7 +139,7 @@ async function verifyOtp() {
   } catch (error: any) {
     console.error("OTP verification error:", error);
     toast.error(error.message || "Invalid verification code");
-  } finally {
+
     isSubmitting.value = false;
   }
 }

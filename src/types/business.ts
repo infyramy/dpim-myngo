@@ -8,6 +8,7 @@ export interface Business {
   sector: BusinessSector;
   category: BusinessCategory;
   mofRegistration: boolean;
+  mofRegistrationNumber?: string;
   url?: string;
   createdAt: Date;
   updatedAt?: Date;
@@ -37,6 +38,7 @@ export interface CreateBusinessRequest {
   sector: BusinessSector;
   category: BusinessCategory;
   mofRegistered: boolean;
+  mofRegistrationNumber?: string;
   url?: string | undefined;
 }
 
@@ -53,6 +55,7 @@ export interface BusinessFormData {
   sector: BusinessSector | "";
   category: BusinessCategory | "";
   mofRegistration: boolean;
+  mofRegistrationNumber?: string;
   url?: string;
 }
 
@@ -64,6 +67,7 @@ export interface BusinessValidationErrors {
   type?: string;
   sector?: string;
   category?: string;
+  mofRegistrationNumber?: string;
   url?: string;
 }
 

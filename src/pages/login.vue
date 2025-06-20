@@ -83,8 +83,8 @@ async function handleSubmit() {
     }, 1000);
   } catch (error: any) {
     console.error("Login error:", error);
-    toast.error(error.message || "Failed to send verification code");
-  } finally {
+    toast.error(error.data.message || "Failed to send verification code");
+
     isSubmitting.value = false;
   }
 }

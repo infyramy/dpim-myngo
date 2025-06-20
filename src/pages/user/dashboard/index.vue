@@ -1,203 +1,193 @@
 <template>
   <div class="space-y-6">
-    <div class="flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-bold">Dashboard</h1>
-        <p class="text-muted-foreground mt-1">Selamat datang ke dashboard anda</p>
-      </div>
+    <!-- Header -->
+    <div>
+      <h1 class="text-2xl font-bold">Dashboard</h1>
+      <p class="text-muted-foreground">Overview of your business activities</p>
     </div>
 
-    <!-- Overview Stats -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <!-- Key Statistics -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
       <Card>
-        <CardContent class="p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-muted-foreground">Perniagaan</p>
-              <p class="text-2xl font-bold">{{ businessCount }}</p>
-            </div>
-            <div class="bg-blue-500/10 p-3 rounded-full">
-              <BuildingIcon class="h-6 w-6 text-blue-500" />
-            </div>
-          </div>
+        <CardContent class="p-4">
+          <div class="text-sm text-muted-foreground">Total Businesses</div>
+          <div class="text-2xl font-bold">{{ businessCount }}</div>
         </CardContent>
       </Card>
       
       <Card>
-        <CardContent class="p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-muted-foreground">Produk</p>
-              <p class="text-2xl font-bold">{{ productCount }}</p>
-            </div>
-            <div class="bg-green-500/10 p-3 rounded-full">
-              <PackageIcon class="h-6 w-6 text-green-500" />
-            </div>
-          </div>
+        <CardContent class="p-4">
+          <div class="text-sm text-muted-foreground">Total Products</div>
+          <div class="text-2xl font-bold">{{ productCount }}</div>
         </CardContent>
       </Card>
       
       <Card>
-        <CardContent class="p-6">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-muted-foreground">Carian Bulan Ini</p>
-              <p class="text-2xl font-bold">{{ searchCount }}</p>
-            </div>
-            <div class="bg-purple-500/10 p-3 rounded-full">
-              <SearchIcon class="h-6 w-6 text-purple-500" />
-            </div>
-          </div>
+        <CardContent class="p-4">
+          <div class="text-sm text-muted-foreground">Active Listings</div>
+          <div class="text-2xl font-bold">{{ activeListings }}</div>
+        </CardContent>
+      </Card>
+      
+      <Card>
+        <CardContent class="p-4">
+          <div class="text-sm text-muted-foreground">Profile Views</div>
+          <div class="text-2xl font-bold">{{ profileViews }}</div>
         </CardContent>
       </Card>
     </div>
 
-    <!-- Quick Actions -->
-    <Card>
+    <!-- Action Required -->
+    <Card v-if="pendingActions.length > 0">
       <CardHeader>
-        <CardTitle>Tindakan Pantas</CardTitle>
-        <CardDescription>Akses pantas ke ciri-ciri utama</CardDescription>
+        <CardTitle class="text-lg">Action Required</CardTitle>
       </CardHeader>
       <CardContent>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <Button 
-            @click="navigateTo('/user/business')" 
-            variant="outline" 
-            class="h-20 flex flex-col items-center justify-center gap-2 hover:bg-muted"
+        <div class="space-y-3">
+          <div 
+            v-for="action in pendingActions" 
+            :key="action.id"
+            class="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
           >
-            <BuildingIcon class="h-6 w-6 text-blue-500" />
-            <span class="text-sm font-medium">Urus Perniagaan</span>
+            <div>
+              <div class="font-medium">{{ action.title }}</div>
+              <div class="text-sm text-muted-foreground">{{ action.description }}</div>
+            </div>
+            <Button size="sm" @click="handleAction(action.action)">
+              {{ action.buttonText }}
+            </Button>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- Recent Activity -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <Card>
+        <CardHeader>
+          <CardTitle class="text-lg">Recent Products</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div v-if="recentProducts.length > 0" class="space-y-3">
+            <div 
+              v-for="product in recentProducts" 
+              :key="product.id"
+              class="flex items-center gap-3 p-2 hover:bg-muted rounded-lg"
+            >
+              <div class="w-10 h-10 bg-gray-200 rounded flex-shrink-0"></div>
+              <div class="flex-1 min-w-0">
+                <div class="font-medium truncate">{{ product.name }}</div>
+                <div class="text-sm text-muted-foreground">{{ product.category }}</div>
+              </div>
+              <Badge variant="secondary" class="text-xs">Active</Badge>
+            </div>
+          </div>
+          <div v-else class="text-center py-6 text-muted-foreground">
+            No products added yet
+          </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle class="text-lg">Your Businesses</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div v-if="businesses.length > 0" class="space-y-3">
+            <div 
+              v-for="business in businesses" 
+              :key="business.id"
+              class="flex items-center justify-between p-2 hover:bg-muted rounded-lg"
+            >
+              <div>
+                <div class="font-medium">{{ business.name }}</div>
+                <div class="text-sm text-muted-foreground">{{ business.ssm }}</div>
+              </div>
+              <Badge variant="outline" class="text-xs">{{ business.type }}</Badge>
+            </div>
+          </div>
+          <div v-else class="text-center py-6 text-muted-foreground">
+            No businesses registered yet
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+
+    <!-- Quick Links -->
+    <Card>
+      <CardHeader>
+        <CardTitle class="text-lg">Quick Actions</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <Button 
+            variant="outline" 
+            class="h-auto p-4 flex flex-col gap-2"
+            @click="navigateTo('/user/businesses/add')"
+          >
+            <BuildingIcon class="h-5 w-5" />
+            <span class="text-sm">Add Business</span>
           </Button>
           
           <Button 
-            @click="navigateTo('/user/products')" 
             variant="outline" 
-            class="h-20 flex flex-col items-center justify-center gap-2 hover:bg-muted"
+            class="h-auto p-4 flex flex-col gap-2"
+            @click="navigateTo('/user/products')"
           >
-            <PackageIcon class="h-6 w-6 text-green-500" />
-            <span class="text-sm font-medium">Urus Produk</span>
+            <PackageIcon class="h-5 w-5" />
+            <span class="text-sm">Add Product</span>
           </Button>
           
           <Button 
-            @click="navigateTo('/user/product-matching')" 
             variant="outline" 
-            class="h-20 flex flex-col items-center justify-center gap-2 hover:bg-muted"
+            class="h-auto p-4 flex flex-col gap-2"
+            @click="navigateTo('/user/product-matching')"
           >
-            <SearchIcon class="h-6 w-6 text-purple-500" />
-            <span class="text-sm font-medium">Padanan Produk</span>
+            <SearchIcon class="h-5 w-5" />
+            <span class="text-sm">Find Products</span>
+          </Button>
+          
+          <Button 
+            variant="outline" 
+            class="h-auto p-4 flex flex-col gap-2"
+            @click="navigateTo('/profile')"
+          >
+            <InfoIcon class="h-5 w-5" />
+            <span class="text-sm">Update Profile</span>
           </Button>
         </div>
       </CardContent>
     </Card>
 
-    <!-- Recent Activity & Overview -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <!-- Recent Products -->
-      <Card>
-        <CardHeader class="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Produk Terkini</CardTitle>
-            <CardDescription>Produk yang baru didaftarkan</CardDescription>
+    <!-- Getting Started Tips -->
+    <Card v-if="showGettingStarted">
+      <CardHeader>
+        <CardTitle class="text-lg">Complete Your Setup</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div class="space-y-2">
+          <div class="flex items-center gap-2 text-sm">
+            <CheckIcon v-if="businessCount > 0" class="h-4 w-4 text-green-500" />
+            <div v-else class="w-4 h-4 rounded-full border-2 border-gray-300"></div>
+            <span :class="businessCount > 0 ? 'line-through text-muted-foreground' : ''">
+              Register at least one business
+            </span>
           </div>
-          <Button variant="ghost" size="sm" @click="navigateTo('/user/products')">
-            Lihat Semua
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div v-if="recentProducts.length > 0" class="space-y-4">
-            <div 
-              v-for="product in recentProducts" 
-              :key="product.id"
-              class="flex items-center gap-3 p-3 rounded-lg border"
-            >
-              <div class="w-12 h-12 bg-muted rounded-md overflow-hidden">
-                <img :src="product.image" :alt="product.name" class="w-full h-full object-cover" />
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="font-medium text-sm truncate">{{ product.name }}</p>
-                <p class="text-xs text-muted-foreground">{{ product.businessName }}</p>
-              </div>
-              <Badge variant="outline" class="text-xs">{{ product.category }}</Badge>
-            </div>
+          
+          <div class="flex items-center gap-2 text-sm">
+            <CheckIcon v-if="productCount > 0" class="h-4 w-4 text-green-500" />
+            <div v-else class="w-4 h-4 rounded-full border-2 border-gray-300"></div>
+            <span :class="productCount > 0 ? 'line-through text-muted-foreground' : ''">
+              Add your first product or service
+            </span>
           </div>
-          <div v-else class="text-center py-8">
-            <PackageIcon class="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <p class="text-sm text-muted-foreground">Tiada produk didaftarkan</p>
-          </div>
-        </CardContent>
-      </Card>
-
-      <!-- Business Overview -->
-      <Card>
-        <CardHeader class="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Perniagaan Anda</CardTitle>
-            <CardDescription>Ringkasan perniagaan berdaftar</CardDescription>
-          </div>
-          <Button variant="ghost" size="sm" @click="navigateTo('/user/business')">
-            Urus
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <div v-if="recentBusinesses.length > 0" class="space-y-4">
-            <div 
-              v-for="business in recentBusinesses" 
-              :key="business.id"
-              class="flex items-center gap-3 p-3 rounded-lg border"
-            >
-              <div class="bg-blue-500/10 p-2 rounded-md">
-                <BuildingIcon class="h-6 w-6 text-blue-500" />
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="font-medium text-sm truncate">{{ business.name }}</p>
-                <p class="text-xs text-muted-foreground">SSM: {{ business.ssm }}</p>
-              </div>
-              <Badge variant="outline" class="text-xs">{{ business.type }}</Badge>
-            </div>
-          </div>
-          <div v-else class="text-center py-8">
-            <BuildingIcon class="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-            <p class="text-sm text-muted-foreground mb-2">Tiada perniagaan didaftarkan</p>
-            <Button size="sm" @click="navigateTo('/user/business')">
-              Daftar Perniagaan
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-
-    <!-- Getting Started -->
-    <Card v-if="businessCount === 0 || productCount === 0">
-      <CardContent class="p-6">
-        <div class="flex items-start gap-4">
-          <div class="bg-primary/10 p-2 rounded-full">
-            <InfoIcon class="h-5 w-5 text-primary" />
-          </div>
-          <div class="flex-1">
-            <h3 class="font-semibold mb-2">Mula Menggunakan Platform</h3>
-            <p class="text-sm text-muted-foreground mb-4">
-              Untuk memaksimumkan penggunaan platform ini, pastikan anda telah:
-            </p>
-            <div class="space-y-2">
-              <div class="flex items-center gap-2 text-sm">
-                <div class="w-2 h-2 rounded-full bg-primary"></div>
-                <span :class="businessCount > 0 ? 'line-through text-muted-foreground' : ''">
-                  Mendaftarkan perniagaan anda
-                </span>
-                <CheckIcon v-if="businessCount > 0" class="h-4 w-4 text-green-500" />
-              </div>
-              <div class="flex items-center gap-2 text-sm">
-                <div class="w-2 h-2 rounded-full bg-primary"></div>
-                <span :class="productCount > 0 ? 'line-through text-muted-foreground' : ''">
-                  Menambah produk atau perkhidmatan
-                </span>
-                <CheckIcon v-if="productCount > 0" class="h-4 w-4 text-green-500" />
-              </div>
-              <div class="flex items-center gap-2 text-sm">
-                <div class="w-2 h-2 rounded-full bg-primary"></div>
-                <span>Meneroka padanan produk dari ahli lain</span>
-              </div>
-            </div>
+          
+          <div class="flex items-center gap-2 text-sm">
+            <CheckIcon v-if="profileComplete" class="h-4 w-4 text-green-500" />
+            <div v-else class="w-4 h-4 rounded-full border-2 border-gray-300"></div>
+            <span :class="profileComplete ? 'line-through text-muted-foreground' : ''">
+              Complete your profile information
+            </span>
           </div>
         </div>
       </CardContent>
@@ -206,50 +196,96 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { 
-  BuildingIcon, 
-  PackageIcon, 
-  SearchIcon, 
-  InfoIcon, 
-  CheckIcon 
-} from "lucide-vue-next"
+import { ref, computed, onMounted } from "vue";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import {
+  BuildingIcon,
+  PackageIcon,
+  SearchIcon,
+  InfoIcon,
+  CheckIcon,
+} from "lucide-vue-next";
+import { apiFetching } from "@/services/api-fetching";
 
-// Sample data - would normally be loaded from an API
-const businesses = ref([
-  {
-    id: 1,
-    name: 'ABC Sdn. Bhd.',
-    ssm: '202201234567',
-    type: 'Sdn Bhd'
-  }
-])
+// Dashboard data from API
+const dashboardData = ref({
+  statistics: {
+    businessCount: 0,
+    productCount: 0,
+    activeListings: 0,
+    profileViews: 0
+  },
+  recentProducts: [],
+  businesses: [],
+  pendingActions: [],
+  profileComplete: false,
+  showGettingStarted: true
+});
 
-const products = ref([
-  {
-    id: 1,
-    name: 'Produk Contoh',
-    businessName: 'ABC Sdn. Bhd.',
-    category: 'Elektronik',
-    image: 'https://placehold.co/100x100/webp'
-  }
-])
+const loading = ref(true);
+const error = ref(null);
 
 // Computed values
-const businessCount = computed(() => businesses.value.length)
-const productCount = computed(() => products.value.length)
-const searchCount = computed(() => 12) // Mock data
+const businessCount = computed(() => dashboardData.value.statistics.businessCount);
+const productCount = computed(() => dashboardData.value.statistics.productCount);
+const activeListings = computed(() => dashboardData.value.statistics.activeListings);
+const profileViews = computed(() => dashboardData.value.statistics.profileViews);
+const profileComplete = computed(() => dashboardData.value.profileComplete);
+const recentProducts = computed(() => dashboardData.value.recentProducts);
+const businesses = computed(() => dashboardData.value.businesses);
+const pendingActions = computed(() => dashboardData.value.pendingActions);
+const showGettingStarted = computed(() => dashboardData.value.showGettingStarted);
 
-const recentProducts = computed(() => products.value.slice(0, 3))
-const recentBusinesses = computed(() => businesses.value.slice(0, 3))
+// API call function
+const fetchDashboardData = async () => {
+  try {
+    loading.value = true;
+    error.value = null;
+    
+    const response = await apiFetching().get("/dashboard", true);
+    console.log("Dashboard response:", response);
+    
+    dashboardData.value = response.data;
+  } catch (err) {
+    error.value = err.message;
+    console.error('Dashboard API error:', err);
+  } finally {
+    loading.value = false;
+  }
+};
 
-// Navigation function
+// Functions
 const navigateTo = (path: string) => {
-  // This would typically use Vue Router
-  console.log(`Navigate to: ${path}`)
-  // For now, you can implement actual navigation based on your routing setup
-}
+  console.log(`Navigate to: ${path}`);
+  // Implement actual navigation here using your router
+  // router.push(path);
+};
+
+const handleAction = (action: string) => {
+  switch (action) {
+    case 'register-business':
+      navigateTo('/user/businesses/add');
+      break;
+    case 'add-product':
+      navigateTo('/user/products');
+      break;
+    case 'complete-profile':
+      navigateTo('/profile');
+      break;
+    default:
+      console.log(`Handle action: ${action}`);
+  }
+};
+
+// Load dashboard data on component mount
+onMounted(() => {
+  fetchDashboardData();
+});
 </script>
