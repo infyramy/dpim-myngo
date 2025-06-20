@@ -74,13 +74,13 @@ const defaultConfig: AppConfig = {
  * Get environment variable value (works in both browser and Node.js)
  */
 const getEnvVar = (key: string): string | undefined => {
-  // Check if we're in a browser environment with Vite
-  if (typeof import.meta !== 'undefined' && import.meta.env) {
-    return import.meta.env[key];
-  }
   // Check if we're in Node.js environment
   if (typeof process !== 'undefined' && process.env) {
     return process.env[key];
+  }
+  // Check if we're in a browser environment with Vite
+  if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
+    return (import.meta as any).env[key];
   }
   return undefined;
 };
@@ -456,4 +456,4 @@ export function useConfigService() {
     resetConfig,
     updateConfig
   };
-} 
+}
