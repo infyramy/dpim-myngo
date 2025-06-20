@@ -45,7 +45,8 @@ RUN apk add --no-cache \
     wget \
     python3 \
     make \
-    g++
+    g++ \
+    gettext
 
 # Install global packages
 RUN npm install -g pnpm serve concurrently
@@ -83,7 +84,7 @@ RUN echo '#!/bin/sh' > start.sh && \
     echo 'echo "🔌 Backend API will be available on port $API_SERVER_PORT"' >> start.sh && \
     echo '' >> start.sh && \
     echo '# Substitute environment variables in nginx config' >> start.sh && \
-    echo 'envsubst '"'"'$FRONTEND_PORT'"'"' < /etc/nginx/http.d/default.conf.template > /etc/nginx/http.d/default.conf' >> start.sh && \
+    echo 'envsubst '"'"'$FRONTEND_PORT $API_SERVER_PORT'"'"' < /etc/nginx/http.d/default.conf.template > /etc/nginx/http.d/default.conf' >> start.sh && \
     echo '' >> start.sh && \
     echo '# Test nginx configuration' >> start.sh && \
     echo 'nginx -t' >> start.sh && \
@@ -93,7 +94,7 @@ RUN echo '#!/bin/sh' > start.sh && \
     echo '  --names "NGINX,BACKEND" \' >> start.sh && \
     echo '  --prefix-colors "blue,green" \' >> start.sh && \
     echo '  "nginx -g '"'"'daemon off;'"'"'" \' >> start.sh && \
-    echo '  "node dist-server/index.js"' >> start.sh
+    echo '  "node dist-server/server/index.js"' >> start.sh
 
 # Make script executable
 RUN chmod +x start.sh

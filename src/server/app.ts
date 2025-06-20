@@ -40,21 +40,21 @@ app.use(cookieParser());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
-// API Routes
-app.use("/auth", authRoutes);
-app.use("/users", userRoutes);
-app.use("/states", statesRoutes);
-app.use("/businesses", businessesRoutes);
-app.use("/lookup", lookupRoutes);
-app.use("/products", productsRoutes);
-app.use("/applications", applicationsRoutes);
-
-// Health check
+// Health check (both with and without /api prefix for compatibility)
 app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-// Health check endpoint for Docker
+// API Routes with /api prefix
+app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
+app.use("/api/states", statesRoutes);
+app.use("/api/businesses", businessesRoutes);
+app.use("/api/lookup", lookupRoutes);
+app.use("/api/products", productsRoutes);
+app.use("/api/applications", applicationsRoutes);
+
+// API Health check endpoint for Docker/nginx
 app.get('/api/health', (req, res) => {
   res.status(200).json({ 
     status: 'OK', 
