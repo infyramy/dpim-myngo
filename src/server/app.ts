@@ -54,4 +54,13 @@ app.get("/health", (req, res) => {
   res.json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
+// Health check endpoint for Docker
+app.get('/api/health', (req, res) => {
+  res.status(200).json({ 
+    status: 'OK', 
+    message: 'Backend API is running',
+    timestamp: new Date().toISOString()
+  });
+});
+
 export default app;

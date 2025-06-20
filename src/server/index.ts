@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const PORT = process.env.API_SERVER_PORT || process.env.BACKEND_PORT || 3002;
+const PORT = process.env.API_SERVER_PORT || 3001;
 
 const startServer = async () => {
   try {

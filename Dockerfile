@@ -1,7 +1,8 @@
 # 🚀 Universal Dockerfile for Vue.js - Works Everywhere!
 # Build arguments to control deployment type
 ARG DEPLOYMENT_TYPE=production
-ARG PORT=3000
+ARG FRONTEND_PORT=3000
+ARG API_SERVER_PORT=3001
 
 # =============================================================================
 # Stage 1: Builder (Common for all deployments)
@@ -29,8 +30,11 @@ RUN pnpm install --no-frozen-lockfile --ignore-scripts
 # Copy source code
 COPY . .
 
-# Build the application using Docker-friendly build command
-RUN pnpm run build:frontend
+# Build the frontend application
+RUN pnpm run build:only
+
+# Build the backend application
+RUN pnpm run build:backend
 
 # =============================================================================
 # Stage 2: Production with Nginx (for production deployments)
@@ -43,8 +47,8 @@ RUN apk add --no-cache curl
 # Copy built files from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy nginx configuration template
+COPY nginx.conf /etc/nginx/templates/default.conf.template
 
 # Create nginx user and set permissions
 RUN chown -R nginx:nginx /usr/share/nginx/html && \
@@ -57,24 +61,36 @@ RUN chown -R nginx:nginx /usr/share/nginx/html && \
 # Switch to nginx user
 USER nginx
 
-# Expose port from nginx.conf
-EXPOSE 3100
+# Set default environment variable
+ENV FRONTEND_PORT=3000
+
+
+
+# Expose the frontend port
+EXPOSE $FRONTEND_PORT
 
 # Health check using curl
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:3100/ || exit 1
+    CMD curl -f http://localhost:$FRONTEND_PORT/ || exit 1
 
-# Start nginx
+# Start nginx (nginx will automatically process templates in /etc/nginx/templates/)
 CMD ["nginx", "-g", "daemon off;"]
 
 # =============================================================================
-# Stage 3: Simple Server (for Coolify, Vercel, Railway, etc.)
+# Stage 3: Simple Server (Frontend + Backend in same container)
 # =============================================================================
 FROM node:20-alpine AS simple
 
-# Install wget for health checks and serve for static hosting
-RUN apk add --no-cache wget && \
-    npm install -g serve
+# Install system dependencies
+RUN apk add --no-cache \
+    wget \
+    curl \
+    python3 \
+    make \
+    g++
+
+# Install global packages
+RUN npm install -g pnpm serve concurrently
 
 # Create non-root user
 RUN addgroup -g 1001 -S appuser && \
@@ -83,24 +99,58 @@ RUN addgroup -g 1001 -S appuser && \
 # Set working directory
 WORKDIR /app
 
-# Copy built files from builder stage
+# Copy built frontend from builder stage
 COPY --from=builder /app/dist ./dist
 
-# Change ownership
+# Copy built backend from builder stage  
+COPY --from=builder /app/dist-server ./dist-server
+
+# Copy package.json and source files needed for backend
+COPY --from=builder /app/package.json ./
+COPY --from=builder /app/src ./src
+COPY --from=builder /app/node_modules ./node_modules
+
+# Create startup script
+RUN echo '#!/bin/sh' > start.sh && \
+    echo '' >> start.sh && \
+    echo '# Set default ports if not provided' >> start.sh && \
+    echo 'FRONTEND_PORT=${FRONTEND_PORT:-3000}' >> start.sh && \
+    echo 'API_SERVER_PORT=${API_SERVER_PORT:-3001}' >> start.sh && \
+    echo '' >> start.sh && \
+    echo 'echo "🚀 Starting myNGO Application"' >> start.sh && \
+    echo 'echo "📱 Frontend will be available on port $FRONTEND_PORT"' >> start.sh && \
+    echo 'echo "🔌 Backend API will be available on port $API_SERVER_PORT"' >> start.sh && \
+    echo '' >> start.sh && \
+    echo '# Start both services using concurrently' >> start.sh && \
+    echo 'exec concurrently \' >> start.sh && \
+    echo '  --names "FRONTEND,BACKEND" \' >> start.sh && \
+    echo '  --prefix-colors "blue,green" \' >> start.sh && \
+    echo '  "serve -s dist -l $FRONTEND_PORT" \' >> start.sh && \
+    echo '  "node dist-server/index.js"' >> start.sh
+
+# Make script executable
+RUN chmod +x start.sh
+
+# Change ownership to appuser
 RUN chown -R appuser:appuser /app
 
 # Switch to non-root user
 USER appuser
 
-# Expose port 3000 (standard for most platforms)
-EXPOSE 3000
+# Set environment variables with defaults
+ENV FRONTEND_PORT=3000
+ENV API_SERVER_PORT=3001
 
-# Health check using wget
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:3000/ || exit 1
+# Expose both ports
+EXPOSE $FRONTEND_PORT $API_SERVER_PORT
 
-# Start serve
-CMD ["serve", "-s", "dist", "-l", "3000"]
+# Health check for both services
+HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
+    CMD wget --no-verbose --tries=1 --spider http://localhost:$FRONTEND_PORT/ && \
+    wget --no-verbose --tries=1 --spider http://localhost:$API_SERVER_PORT/api/health || exit 1
+
+# Start both frontend and backend
+CMD ["./start.sh"]
 
 # =============================================================================
 # Stage 4: Universal (Auto-detect or manual selection)
