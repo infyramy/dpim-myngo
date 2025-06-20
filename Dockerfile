@@ -61,7 +61,7 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 
 # Copy built backend from builder stage  
-COPY --from=builder /app/dist-server ./dist-server
+COPY --from=builder /app/dist/server ./dist-server
 
 # Copy package.json and source files needed for backend
 COPY --from=builder /app/package.json ./
