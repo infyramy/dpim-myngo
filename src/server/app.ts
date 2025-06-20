@@ -1,4 +1,4 @@
-import express from "express";
+import express, { Express } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import morgan from "morgan";
@@ -14,7 +14,7 @@ import lookupRoutes from "./routes/lookup";
 import productsRoutes from "./routes/products";
 import applicationsRoutes from "./routes/applications";
 
-const app = express();
+const app: Express = express();
 
 // Security middleware
 app.use(helmet());

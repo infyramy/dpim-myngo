@@ -47,21 +47,19 @@ COPY --from=builder /app/dist /usr/share/nginx/html
 # Copy nginx configuration template
 COPY nginx.conf /etc/nginx/templates/default.conf.template
 
-# Create nginx user and set permissions
-RUN chown -R nginx:nginx /usr/share/nginx/html && \
-    chown -R nginx:nginx /var/cache/nginx && \
-    chown -R nginx:nginx /var/log/nginx && \
-    chown -R nginx:nginx /etc/nginx/conf.d && \
-    touch /var/run/nginx.pid && \
-    chown -R nginx:nginx /var/run/nginx.pid
+# Copy custom entrypoint script
+COPY entrypoint.sh /entrypoint.sh
 
-# Switch to nginx user
-USER nginx
+# Make entrypoint executable
+RUN chmod +x /entrypoint.sh
+
+# Ensure nginx directories exist and have proper permissions
+RUN mkdir -p /var/cache/nginx /var/log/nginx /etc/nginx/conf.d && \
+    chown -R nginx:nginx /usr/share/nginx/html && \
+    chmod -R 755 /var/cache/nginx /var/log/nginx /etc/nginx/conf.d
 
 # Set default environment variable
 ENV FRONTEND_PORT=3000
-
-
 
 # Expose the frontend port
 EXPOSE $FRONTEND_PORT
@@ -70,8 +68,8 @@ EXPOSE $FRONTEND_PORT
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD curl -f http://localhost:$FRONTEND_PORT/ || exit 1
 
-# Start nginx (nginx will automatically process templates in /etc/nginx/templates/)
-CMD ["nginx", "-g", "daemon off;"]
+# Use custom entrypoint script
+CMD ["/entrypoint.sh"]
 
 # =============================================================================
 # Stage 3: Simple Server (Frontend + Backend in same container)
