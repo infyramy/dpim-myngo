@@ -64,6 +64,9 @@ COPY --from=builder /app/dist ./dist
 # Copy built backend from builder stage  
 COPY --from=builder /app/dist/server ./dist-server
 
+# Create package.json for backend with CommonJS module type
+RUN echo '{"type": "commonjs"}' > dist-server/package.json
+
 # Copy package.json and source files needed for backend
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/src ./src
