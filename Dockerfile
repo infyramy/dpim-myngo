@@ -30,7 +30,7 @@ RUN pnpm install --no-frozen-lockfile --ignore-scripts
 COPY . .
 
 # Build the application using Docker-friendly build command
-RUN pnpm run build:only
+RUN pnpm run build:frontend
 
 # =============================================================================
 # Stage 2: Production with Nginx (for production deployments)
