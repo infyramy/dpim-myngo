@@ -34,52 +34,15 @@ COPY . .
 RUN pnpm run build
 
 # =============================================================================
-# Stage 2: Production with Nginx (for production deployments)
+# Stage 2: Production (Frontend + Backend in same container)
 # =============================================================================
-FROM nginx:alpine AS production
+FROM node:20-alpine AS production
 
-# Install curl for health checks
-RUN apk add --no-cache curl
-
-# Copy built files from builder stage
-COPY --from=builder /app/dist /usr/share/nginx/html
-
-# Copy nginx configuration template
-COPY nginx.conf /etc/nginx/templates/default.conf.template
-
-# Copy custom entrypoint script
-COPY entrypoint.sh /entrypoint.sh
-
-# Make entrypoint executable
-RUN chmod +x /entrypoint.sh
-
-# Ensure nginx directories exist and have proper permissions
-RUN mkdir -p /var/cache/nginx /var/log/nginx /etc/nginx/conf.d && \
-    chown -R nginx:nginx /usr/share/nginx/html && \
-    chmod -R 755 /var/cache/nginx /var/log/nginx /etc/nginx/conf.d
-
-# Set default environment variable
-ENV FRONTEND_PORT=3000
-
-# Expose the frontend port
-EXPOSE $FRONTEND_PORT
-
-# Health check using curl
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-    CMD curl -f http://localhost:$FRONTEND_PORT/ || exit 1
-
-# Use custom entrypoint script
-CMD ["/entrypoint.sh"]
-
-# =============================================================================
-# Stage 3: Simple Server (Frontend + Backend in same container)
-# =============================================================================
-FROM node:20-alpine AS simple
-
-# Install system dependencies
+# Install system dependencies including nginx for serving frontend
 RUN apk add --no-cache \
-    wget \
+    nginx \
     curl \
+    wget \
     python3 \
     make \
     g++
@@ -105,32 +68,41 @@ COPY --from=builder /app/package.json ./
 COPY --from=builder /app/src ./src
 COPY --from=builder /app/node_modules ./node_modules
 
-# Create startup script
+# Copy nginx configuration template
+COPY nginx.conf /etc/nginx/http.d/default.conf.template
+
+# Create startup script that runs both frontend (nginx) and backend (node)
 RUN echo '#!/bin/sh' > start.sh && \
     echo '' >> start.sh && \
     echo '# Set default ports if not provided' >> start.sh && \
-    echo 'FRONTEND_PORT=${FRONTEND_PORT:-3000}' >> start.sh && \
-    echo 'API_SERVER_PORT=${API_SERVER_PORT:-3001}' >> start.sh && \
+    echo 'export FRONTEND_PORT=${FRONTEND_PORT:-3000}' >> start.sh && \
+    echo 'export API_SERVER_PORT=${API_SERVER_PORT:-3001}' >> start.sh && \
     echo '' >> start.sh && \
     echo 'echo "🚀 Starting myNGO Application"' >> start.sh && \
-    echo 'echo "📱 Frontend will be available on port $FRONTEND_PORT"' >> start.sh && \
+    echo 'echo "📱 Frontend (Nginx) will be available on port $FRONTEND_PORT"' >> start.sh && \
     echo 'echo "🔌 Backend API will be available on port $API_SERVER_PORT"' >> start.sh && \
+    echo '' >> start.sh && \
+    echo '# Substitute environment variables in nginx config' >> start.sh && \
+    echo 'envsubst '"'"'$FRONTEND_PORT'"'"' < /etc/nginx/http.d/default.conf.template > /etc/nginx/http.d/default.conf' >> start.sh && \
+    echo '' >> start.sh && \
+    echo '# Test nginx configuration' >> start.sh && \
+    echo 'nginx -t' >> start.sh && \
     echo '' >> start.sh && \
     echo '# Start both services using concurrently' >> start.sh && \
     echo 'exec concurrently \' >> start.sh && \
-    echo '  --names "FRONTEND,BACKEND" \' >> start.sh && \
+    echo '  --names "NGINX,BACKEND" \' >> start.sh && \
     echo '  --prefix-colors "blue,green" \' >> start.sh && \
-    echo '  "serve -s dist -l $FRONTEND_PORT" \' >> start.sh && \
+    echo '  "nginx -g '"'"'daemon off;'"'"'" \' >> start.sh && \
     echo '  "node dist-server/index.js"' >> start.sh
 
 # Make script executable
 RUN chmod +x start.sh
 
-# Change ownership to appuser
-RUN chown -R appuser:appuser /app
-
-# Switch to non-root user
-USER appuser
+# Ensure nginx directories exist and have proper permissions
+RUN mkdir -p /var/cache/nginx /var/log/nginx /etc/nginx/http.d && \
+    chown -R appuser:appuser /app && \
+    chown -R nginx:nginx /usr/share/nginx/html && \
+    chmod -R 755 /var/cache/nginx /var/log/nginx /etc/nginx/http.d
 
 # Set environment variables with defaults
 ENV FRONTEND_PORT=3000
@@ -142,12 +114,51 @@ EXPOSE $FRONTEND_PORT $API_SERVER_PORT
 # Health check for both services
 HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
     CMD wget --no-verbose --tries=1 --spider http://localhost:$FRONTEND_PORT/ && \
-    wget --no-verbose --tries=1 --spider http://localhost:$API_SERVER_PORT/api/health || exit 1
+    wget --no-verbose --tries=1 --spider http://localhost:$API_SERVER_PORT/health || exit 1
 
 # Start both frontend and backend
 CMD ["./start.sh"]
 
 # =============================================================================
-# Stage 4: Universal (Auto-detect or manual selection)
+# Stage 3: Development (For local development with hot reload)
+# =============================================================================
+FROM node:20-alpine AS development
+
+# Install system dependencies
+RUN apk add --no-cache \
+    curl \
+    wget \
+    python3 \
+    make \
+    g++
+
+# Install global packages
+RUN npm install -g pnpm
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY package.json pnpm-lock.yaml ./
+
+# Install dependencies
+RUN pnpm install
+
+# Copy source code
+COPY . .
+
+# Set environment variables
+ENV NODE_ENV=development
+ENV FRONTEND_PORT=5173
+ENV API_SERVER_PORT=3001
+
+# Expose ports for development
+EXPOSE 5173 3001
+
+# Start development servers
+CMD ["pnpm", "run", "dev"]
+
+# =============================================================================
+# Stage 4: Final (Auto-select based on DEPLOYMENT_TYPE)
 # =============================================================================
 FROM ${DEPLOYMENT_TYPE} AS final
